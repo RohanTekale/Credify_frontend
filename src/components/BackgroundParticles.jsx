@@ -1,47 +1,63 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import Particles from 'react-tsparticles';
 import { loadFull } from 'tsparticles';
 
 const BackgroundParticles = () => {
-  const particlesInit = async (main) => {
-    await loadFull(main);
-  };
+  const particlesInit = useCallback(async (engine) => {
+    await loadFull(engine);
+  }, []);
 
   return (
-    <Particles
-      id="tsparticles"
-      init={particlesInit}
-      options={{
-        fullScreen: { enable: true, zIndex: -1 },
-        particles: {
-          number: { value: 50, density: { enable: true, value_area: 800 } },
-          color: { value: '#ffffff' },
-          shape: { type: 'circle' },
-          opacity: { value: 0.3, random: true },
-          size: { value: 3, random: true },
-          move: {
-            enable: true,
-            speed: 1,
-            direction: 'none',
-            random: true,
-            straight: false,
-            out_mode: 'out',
+    <div className="absolute inset-0 -z-10">
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        options={{
+          background: {
+            color: {
+              value: 'transparent',
+            },
           },
-        },
-        interactivity: {
-          events: {
-            onhover: { enable: true, mode: 'repulse' },
-            onclick: { enable: true, mode: 'push' },
+          fpsLimit: 120,
+          interactivity: {
+            events: {
+              onClick: { enable: true, mode: 'push' },
+              onHover: { enable: true, mode: 'repulse' },
+              resize: true,
+            },
+            modes: {
+              push: { quantity: 4 },
+              repulse: { distance: 200, duration: 0.4 },
+            },
           },
-          modes: {
-            repulse: { distance: 100, duration: 0.4 },
-            push: { particles_nb: 4 },
+          particles: {
+            color: { value: '#ffffff' },
+            links: {
+              color: '#ffffff',
+              distance: 150,
+              enable: true,
+              opacity: 0.5,
+              width: 1,
+            },
+            collisions: { enable: true },
+            move: {
+              direction: 'none',
+              enable: true,
+              outModes: { default: 'bounce' },
+              speed: 2,
+            },
+            number: {
+              density: { enable: true, area: 800 },
+              value: 80,
+            },
+            opacity: { value: 0.5 },
+            shape: { type: 'circle' },
+            size: { value: { min: 1, max: 5 } },
           },
-        },
-        retina_detect: true,
-      }}
-      className="absolute inset-0 pointer-events-none"
-    />
+          detectRetina: true,
+        }}
+      />
+    </div>
   );
 };
 
