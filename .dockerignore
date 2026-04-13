@@ -1,0 +1,8 @@
+# create this file: credify-frontend/.dockerignore
+node_modules
+dist
+.git
+*.log
+*.zip
+untitled\ folder
+untitled\ folder.zip

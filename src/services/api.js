@@ -1,83 +1,181 @@
-// ─── Credify API Service Layer ────────────────────────────────────────────────
-// All HTTP calls live here. Components import named exports, never raw axios.
-// WHY: Interceptors handle JWT injection and error normalisation in one place.
+// src/services/api.js
+// ─── Credify Centralized API Service Layer ────────────────────────────────────
+// Single source of truth for all HTTP calls.
+// Uses axios with JWT auto-attach, token refresh, and unified error handling.
+
 import axios from 'axios';
 
-const BASE = 'http://localhost:8080/api';
+// ── Config ────────────────────────────────────────────────────────────────────
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const ACCESS_KEY  = 'access_token';
+const REFRESH_KEY = 'refresh_token';
 
-export const http = axios.create({ baseURL: BASE, headers: { 'Content-Type': 'application/json' } });
+// ── Axios instance ─────────────────────────────────────────────────────────────
+export const http = axios.create({
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
+});
 
-// ── JWT auto-attach ───────────────────────────────────────────────────────────
+// ── Request interceptor — attach JWT ──────────────────────────────────────────
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem(ACCESS_KEY);
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// ── Friendly error surfacing ──────────────────────────────────────────────────
+// ── Response interceptor — auto-refresh + error normalisation ─────────────────
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
+  failedQueue = [];
+};
+
 http.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
+    const original = err.config;
+
+    // Auto-refresh on 401
+    if (err.response?.status === 401 && !original._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            original.headers.Authorization = `Bearer ${token}`;
+            return http(original);
+          })
+          .catch((e) => Promise.reject(e));
+      }
+
+      original._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refresh = localStorage.getItem(REFRESH_KEY);
+        if (!refresh) throw new Error('No refresh token');
+
+        const { data } = await axios.post(`${BASE_URL}/users/token/refresh/`, { refresh });
+        const newAccess = data.data?.access || data.access;
+
+        localStorage.setItem(ACCESS_KEY, newAccess);
+        http.defaults.headers.Authorization = `Bearer ${newAccess}`;
+        processQueue(null, newAccess);
+        original.headers.Authorization = `Bearer ${newAccess}`;
+        return http(original);
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+        // Clear auth and redirect to login
+        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(REFRESH_KEY);
+        window.location.href = '/login';
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Normalise error message
     const data = err.response?.data;
-    const msg = data?.detail
-      || data?.message
-      || data?.error
-      || (data && typeof data === 'object' ? Object.values(data).flat()[0] : null)
-      || 'Something went wrong';
+    const msg =
+      data?.message ||
+      data?.detail ||
+      data?.error ||
+      (data?.errors && typeof data.errors === 'object'
+        ? Object.values(data.errors).flat()[0]
+        : null) ||
+      (data && typeof data === 'object' ? Object.values(data).flat()[0] : null) ||
+      'Something went wrong. Please try again.';
+
     return Promise.reject(new Error(String(msg)));
   }
 );
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// ── Auth helpers ───────────────────────────────────────────────────────────────
+export const tokenStorage = {
+  setTokens: (access, refresh) => {
+    localStorage.setItem(ACCESS_KEY, access);
+    if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
+  },
+  getAccess:  ()  => localStorage.getItem(ACCESS_KEY),
+  getRefresh: ()  => localStorage.getItem(REFRESH_KEY),
+  clear:      ()  => {
+    localStorage.removeItem(ACCESS_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem('user');
+    localStorage.removeItem('is_admin');
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH API
+// ─────────────────────────────────────────────────────────────────────────────
 export const authAPI = {
-  login:              (d) => http.post('/users/login/', d),
   register:           (d) => http.post('/users/register/', d),
+  login:              (d) => http.post('/users/login/', d),
+  refreshToken:       (d) => http.post('/users/token/refresh/', d),
   forgotPassword:     (d) => http.post('/users/forgot_password/', d),
   resetPassword:      (d) => http.post('/users/reset_password/', d),
   changePassword:     (d) => http.post('/users/change_password/', d),
   requestReactivation:(d) => http.post('/users/request_reactivation/', d),
 };
 
-// ─── User / Profile ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// USER / PROFILE API
+// ─────────────────────────────────────────────────────────────────────────────
 export const userAPI = {
-  getProfile:   ()  => http.get('/users/profile'),
-  updateProfile:(d) => http.put('/users/profile/', d),
-  uploadKYC:    (fd)=> http.post('/users/kyc_upload/', fd, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getProfile:   ()    => http.get('/users/profile'),
+  updateProfile:(d)   => http.put('/users/profile/', d),
+  uploadKYC:    (fd)  => http.post('/users/kyc_upload/', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 };
 
-// ─── Cards ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CARDS API
+// ─────────────────────────────────────────────────────────────────────────────
 export const cardAPI = {
-  getMyCards:  ()   => http.get('/cards/'),
-  getCard:     (id) => http.get(`/cards/${id}/`),
-  createCard:  (d)  => http.post('/cards/create_card/', d),
-  freeze:      (id) => http.patch(`/cards/${id}/freeze/`),
-  unfreeze:    (id) => http.patch(`/cards/${id}/unfreeze/`),
-  block:       (id) => http.patch(`/cards/${id}/block/`),
-  unblock:     (id) => http.patch(`/cards/${id}/unblock/`),
+  getMyCards:   (params) => http.get('/cards/', { params }),
+  getCard:      (id)     => http.get(`/cards/${id}/`),
+  createCard:   (d)      => http.post('/cards/create_card/', d),
+  freeze:       (id)     => http.patch(`/cards/${id}/freeze/`),
+  unfreeze:     (id)     => http.patch(`/cards/${id}/unfreeze/`),
+  block:        (id)     => http.patch(`/cards/${id}/block/`),
+  unblock:      (id)     => http.patch(`/cards/${id}/unblock/`),
   createSubscription: (d) => http.post('/cards/subscriptions/create_subscription/', d),
 };
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TRANSACTIONS API
+// ─────────────────────────────────────────────────────────────────────────────
 export const transactionAPI = {
   create:    (d)      => http.post('/transactions/create_transaction/', d),
-  getAll:    ()       => http.get('/transactions/'),
-  getByCard: (cardId) => http.get(`/transactions/?card_id=${cardId}`),
+  getAll:    (params) => http.get('/transactions/', { params }),
+  getByCard: (cardId) => http.get('/transactions/', { params: { card_id: cardId } }),
 };
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN API
+// ─────────────────────────────────────────────────────────────────────────────
 export const adminAPI = {
-  listUsers:   ()       => http.get('/users'),
-  getUser:     (id)     => http.get(`/users/${id}`),
-  updateUser:  (id, d)  => http.put(`/users/${id}/`, d),
-  deleteUser:  (id)     => http.delete(`/users/${id}`),
-  reviewKYC:   (d)      => http.post('/users/kyc_review/', d),
-  reviewReactivation: (d) => http.post('/users/review_reactivation_request/', d),
-  listAllCards:   ()    => http.get('/cards/list_admin_cards/'),
-  approveCardReq: (d)   => http.post('/cards/approve_card_request/', d),
-  freezeCard:  (id)     => http.patch(`/cards/${id}/freeze/`),
-  unfreezeCard:(id)     => http.patch(`/cards/${id}/unfreeze/`),
-  blockCard:   (id)     => http.patch(`/cards/${id}/block/`),
-  unblockCard: (id)     => http.patch(`/cards/${id}/unblock/`),
+  // Users
+  listUsers:          (params) => http.get('/users/', { params }),
+  getUser:            (id)     => http.get(`/users/${id}/`),
+  updateUser:         (id, d)  => http.put(`/users/${id}/`, d),
+  deleteUser:         (id)     => http.delete(`/users/${id}/`),
+  reviewKYC:          (d)      => http.post('/users/kyc_review/', d),
+  reviewReactivation: (d)      => http.post('/users/review_reactivation_request/', d),
+
+  // Cards
+  listAllCards:    (params) => http.get('/cards/list_admin_cards/', { params }),
+  approveCardReq:  (d)      => http.post('/cards/approve_card_request/', d),
+  freezeCard:      (id)     => http.patch(`/cards/${id}/freeze/`),
+  unfreezeCard:    (id)     => http.patch(`/cards/${id}/unfreeze/`),
+  blockCard:       (id)     => http.patch(`/cards/${id}/block/`),
+  unblockCard:     (id)     => http.patch(`/cards/${id}/unblock/`),
 };
 
 export default http;
