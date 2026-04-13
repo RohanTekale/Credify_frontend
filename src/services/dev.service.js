@@ -1,25 +1,61 @@
-// ─── Dev Panel API Service ─────────────────────────────────────────────────────
-import { http } from './api';
+// src/services/dev.service.js
+// ─── Dev Panel API Service ────────────────────────────────────────────────────
+// All calls go through Nginx → /api/dev/* → Django backend.
+// No hardcoded host needed — same-origin via Nginx proxy.
+
+import axios from 'axios';
+
+const devHttp = axios.create({
+  baseURL: '/api/dev',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Auto-attach JWT
+devHttp.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Friendly error surfacing
+devHttp.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const data = err.response?.data;
+    const msg =
+      data?.error ||
+      data?.detail ||
+      data?.message ||
+      (data && typeof data === 'object' ? Object.values(data).flat()[0] : null) ||
+      'Dev panel request failed';
+    return Promise.reject(new Error(String(msg)));
+  }
+);
 
 export const devAPI = {
-  // Tables
-  getTables:       ()              => http.get('/dev/tables/'),
-  getTableData:    (table, params) => http.get(`/dev/tables/${table}/`, { params }),
-  getTableSchema:  (table)         => http.get(`/dev/tables/${table}/schema/`),
+  // ── Stats ───────────────────────────────────────────────────────────────────
+  getDbStats: () => devHttp.get('/stats/'),
 
-  // CRUD
-  createRow:  (table, data)     => http.post(`/dev/tables/${table}/`, data),
-  updateRow:  (table, id, data) => http.put(`/dev/tables/${table}/${id}/`, data),
-  deleteRow:  (table, id)       => http.delete(`/dev/tables/${table}/${id}/`),
+  // ── Tables ──────────────────────────────────────────────────────────────────
+  getTables:      ()              => devHttp.get('/tables/'),
+  getTableData:   (table, params) => devHttp.get(`/tables/${table}/`, { params }),
+  getTableSchema: (table)         => devHttp.get(`/tables/${table}/schema/`),
 
-  // SQL Query runner
-  runQuery: (query) => http.post('/dev/query/', { query }),
+  // ── CRUD ────────────────────────────────────────────────────────────────────
+  createRow: (table, data)      => devHttp.post(`/tables/${table}/`, data),
+  updateRow: (table, id, data)  => devHttp.put(`/tables/${table}/${id}/`, data),
+  deleteRow: (table, id)        => devHttp.delete(`/tables/${table}/${id}/`),
 
-  // Stats / Meta
-  getDbStats: () => http.get('/dev/stats/'),
-  getQueryHistory: () => http.get('/dev/query/history/'),
+  // ── SQL Runner ──────────────────────────────────────────────────────────────
+  runQuery:       (query) => devHttp.post('/query/', { query }),
+  getQueryHistory: ()     => devHttp.get('/query/history/'),
 
-  // API Debugger
+  // ── Audit Logs ──────────────────────────────────────────────────────────────
+  getLogs: (params) => devHttp.get('/logs/', { params }),
+
+  // ── API Proxy/Debugger ───────────────────────────────────────────────────────
   proxyRequest: (method, path, body, headers) =>
-    http.post('/dev/proxy/', { method, path, body, headers }),
+    devHttp.post('/proxy/', { method, path, body, headers }),
 };
+
+export default devAPI;

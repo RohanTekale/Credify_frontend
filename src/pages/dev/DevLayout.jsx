@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+// src/pages/dev/DevLayout.jsx
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 
@@ -41,7 +42,8 @@ const NAV = [
     to: '/dev/api',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
       </svg>
     ),
   },
@@ -60,122 +62,159 @@ const NAV = [
 
 export default function DevLayout() {
   const { user, isAdmin, logout } = useAuthStore();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+  const [time, setTime] = useState(new Date().toLocaleTimeString());
 
+  // Redirect non-admins away immediately
   useEffect(() => {
-    setMounted(true);
+    if (!isAdmin) navigate('/dashboard', { replace: true });
+  }, [isAdmin, navigate]);
+
+  // Live clock
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
+    return () => clearInterval(t);
   }, []);
 
-  return (
-    <div style={styles.root}>
-      {/* ── Grid lines bg ── */}
-      <div style={styles.gridBg} />
+  const handleLogout = () => { logout(); navigate('/login'); };
 
-      {/* ── Sidebar ── */}
-      <aside style={{ ...styles.sidebar, width: collapsed ? 68 : 240 }}>
-        {/* Logo */}
-        <div style={styles.sidebarHeader}>
-          <div style={styles.logoMark}>
-            <span style={styles.logoIcon}>⬡</span>
-          </div>
+  const breadCrumbPage = location.pathname
+    .replace('/dev', '')
+    .replace(/^\//, '')
+    .split('/')[0] || '';
+
+  return (
+    <div style={S.root}>
+      {/* Grid bg */}
+      <div style={S.gridBg} />
+
+      {/* Sidebar */}
+      <aside style={{ ...S.sidebar, width: collapsed ? 68 : 240 }}>
+        {/* Header */}
+        <div style={S.sidebarHeader}>
+          <div style={S.logoMark}>⬡</div>
           {!collapsed && (
-            <div style={styles.logoText}>
-              <span style={styles.logoName}>DevPanel</span>
-              <span style={styles.logoBadge}>ALPHA</span>
+            <div style={S.logoText}>
+              <span style={S.logoName}>DevPanel</span>
+              <span style={S.logoBadge}>ALPHA</span>
             </div>
           )}
-          <button onClick={() => setCollapsed(c => !c)} style={styles.collapseBtn}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {collapsed ? <polyline points="13 17 18 12 13 7"/> : <polyline points="11 17 6 12 11 7"/>}
+          <button onClick={() => setCollapsed(c => !c)} style={S.collapseBtn} title="Toggle sidebar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {collapsed
+                ? <><polyline points="13 17 18 12 13 7"/></>
+                : <><polyline points="11 17 6 12 11 7"/></>}
             </svg>
           </button>
         </div>
 
-        {/* System status */}
+        {/* DB status */}
         {!collapsed && (
-          <div style={styles.statusBar}>
-            <span style={styles.statusDot} />
-            <span style={styles.statusText}>PostgreSQL · Connected</span>
+          <div style={S.statusBar}>
+            <span style={S.statusDot} />
+            <span style={S.statusText}>PostgreSQL · Connected</span>
           </div>
         )}
 
-        {/* Nav */}
-        <nav style={styles.nav}>
+        {/* Navigation */}
+        <nav style={S.nav}>
           {NAV.map((item, i) => (
             <NavLink
               key={item.id}
               to={item.to}
               end={item.end}
               style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive ? styles.navLinkActive : {}),
-                animationDelay: `${i * 60}ms`,
+                ...S.navLink,
+                ...(isActive ? S.navLinkActive : {}),
+                animationDelay: `${i * 55}ms`,
                 justifyContent: collapsed ? 'center' : 'flex-start',
+                paddingLeft: collapsed ? 0 : 10,
               })}
             >
               {({ isActive }) => (
                 <>
-                  <span style={{ ...styles.navIcon, ...(isActive ? styles.navIconActive : {}) }}>
+                  <span style={{ ...S.navIcon, ...(isActive ? S.navIconActive : {}) }}>
                     {item.icon}
                   </span>
-                  {!collapsed && <span style={styles.navLabel}>{item.label}</span>}
-                  {isActive && !collapsed && <span style={styles.navActivePip} />}
+                  {!collapsed && <span style={S.navLabel}>{item.label}</span>}
+                  {isActive && !collapsed && <span style={S.navPip} />}
                 </>
               )}
             </NavLink>
           ))}
         </nav>
 
+        {/* Back to Admin Dashboard link */}
+        {!collapsed && (
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={S.backBtn}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Admin Dashboard
+          </button>
+        )}
+
         {/* User footer */}
-        <div style={{ ...styles.sidebarFooter, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <div style={styles.avatar}>
-            {(user?.full_name || user?.email || 'D')[0].toUpperCase()}
+        <div style={{ ...S.sidebarFooter, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+          <div style={S.avatar} title={user?.username}>
+            {(user?.full_name || user?.username || user?.email || 'D')[0].toUpperCase()}
           </div>
           {!collapsed && (
-            <div style={styles.userInfo}>
-              <span style={styles.userName}>{user?.full_name || user?.email || 'Developer'}</span>
-              <span style={styles.userRole}>{isAdmin ? 'Admin' : 'Dev'}</span>
+            <div style={S.userInfo}>
+              <span style={S.userName}>{user?.username || user?.email || 'Developer'}</span>
+              <span style={S.userRole}>Admin · Staff</span>
             </div>
+          )}
+          {!collapsed && (
+            <button onClick={handleLogout} style={S.logoutBtn} title="Sign out">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+            </button>
           )}
         </div>
       </aside>
 
-      {/* ── Main ── */}
-      <main style={styles.main}>
-        {/* Top bar */}
-        <header style={styles.topBar}>
-          <div style={styles.breadcrumb}>
-            <span style={styles.breadcrumbRoot}>dev</span>
-            {location.pathname !== '/dev' && (
+      {/* Main */}
+      <main style={S.main}>
+        {/* Topbar */}
+        <header style={S.topBar}>
+          <div style={S.breadcrumb}>
+            <span style={S.bcRoot}>dev</span>
+            {breadCrumbPage && (
               <>
-                <span style={styles.breadcrumbSep}>/</span>
-                <span style={styles.breadcrumbCurrent}>
-                  {location.pathname.replace('/dev/', '')}
-                </span>
+                <span style={S.bcSep}>/</span>
+                <span style={S.bcPage}>{breadCrumbPage}</span>
               </>
             )}
           </div>
-          <div style={styles.topBarActions}>
-            <div style={styles.envBadge}>
-              <span style={styles.envDot} />
-              <span>localhost:8080</span>
+          <div style={S.topRight}>
+            <div style={S.envChip}>
+              <span style={S.envDot} />
+              localhost:8080
             </div>
-            <div style={styles.timeBadge}>{new Date().toLocaleTimeString()}</div>
+            <div style={S.timeClock}>{time}</div>
           </div>
         </header>
 
-        {/* Outlet */}
-        <div style={styles.outlet}>
+        {/* Page content */}
+        <div style={S.content}>
           <Outlet />
         </div>
       </main>
 
       <style>{`
         @keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
-        @keyframes pulseGlow { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes pulseGlow { 0%,100%{opacity:1} 50%{opacity:0.4} }
         * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(59,97,245,0.25); border-radius: 3px; }
       `}</style>
     </div>
   );
@@ -183,66 +222,48 @@ export default function DevLayout() {
 
 const C = {
   bg: '#080c14',
-  bgSubtle: '#0d1321',
   bgCard: 'rgba(255,255,255,0.035)',
   border: 'rgba(255,255,255,0.07)',
   brand: '#3b61f5',
-  brandGlow: 'rgba(59,97,245,0.15)',
+  brandGlow: 'rgba(59,97,245,0.14)',
   text: '#f0f4ff',
-  textSecondary: '#8b96b0',
+  textSec: '#8b96b0',
   textMuted: '#4b5675',
   success: '#10b981',
 };
 
-const styles = {
+const S = {
   root: {
-    display: 'flex',
-    height: '100vh',
-    width: '100%',
-    background: C.bg,
-    overflow: 'hidden',
-    position: 'relative',
-    fontFamily: "'DM Sans', sans-serif",
+    display: 'flex', height: '100vh', width: '100%',
+    background: C.bg, overflow: 'hidden', position: 'fixed',
+    inset: 0, zIndex: 100, fontFamily: "'DM Sans',sans-serif",
   },
   gridBg: {
-    position: 'absolute',
-    inset: 0,
+    position: 'absolute', inset: 0,
     backgroundImage: `linear-gradient(rgba(59,97,245,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,97,245,0.04) 1px, transparent 1px)`,
-    backgroundSize: '40px 40px',
-    pointerEvents: 'none',
-    zIndex: 0,
+    backgroundSize: '40px 40px', pointerEvents: 'none', zIndex: 0,
   },
   sidebar: {
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'rgba(8,12,20,0.95)',
+    display: 'flex', flexDirection: 'column',
+    background: 'rgba(8,12,20,0.97)',
     borderRight: `1px solid ${C.border}`,
     backdropFilter: 'blur(20px)',
-    position: 'relative',
-    zIndex: 10,
+    position: 'relative', zIndex: 10,
     transition: 'width 240ms cubic-bezier(0.16,1,0.3,1)',
-    overflow: 'hidden',
-    flexShrink: 0,
+    overflow: 'hidden', flexShrink: 0,
   },
   sidebarHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '20px 16px 16px',
+    display: 'flex', alignItems: 'center', gap: 10,
+    padding: '18px 14px 14px',
     borderBottom: `1px solid ${C.border}`,
   },
   logoMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 34, height: 34, borderRadius: 8, flexShrink: 0,
     background: `linear-gradient(135deg, ${C.brand}, #6089ff)`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 16, color: '#fff',
     boxShadow: `0 0 16px rgba(59,97,245,0.4)`,
   },
-  logoIcon: { fontSize: 16, color: '#fff' },
   logoText: { display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 },
   logoName: { fontSize: 14, fontWeight: 700, color: C.text, fontFamily: "'Sora',sans-serif", letterSpacing: '-0.02em' },
   logoBadge: {
@@ -250,134 +271,89 @@ const styles = {
     background: C.brandGlow, padding: '1px 5px', borderRadius: 3, width: 'fit-content',
   },
   collapseBtn: {
-    background: 'transparent',
-    border: `1px solid ${C.border}`,
-    color: C.textMuted,
-    borderRadius: 6,
-    width: 24,
-    height: 24,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    transition: 'background 150ms, color 150ms',
+    background: 'transparent', border: `1px solid ${C.border}`,
+    color: C.textMuted, borderRadius: 6, width: 24, height: 24,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0, transition: 'background 150ms, color 150ms',
   },
   statusBar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '8px 16px',
-    borderBottom: `1px solid ${C.border}`,
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '7px 16px', borderBottom: `1px solid ${C.border}`,
     background: 'rgba(16,185,129,0.04)',
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
-    background: C.success,
-    boxShadow: `0 0 6px ${C.success}`,
-    animation: 'pulseGlow 2s ease-in-out infinite',
+    width: 6, height: 6, borderRadius: '50%', background: C.success,
+    boxShadow: `0 0 6px ${C.success}`, animation: 'pulseGlow 2s ease-in-out infinite',
   },
   statusText: { fontSize: 11, color: C.success, fontFamily: "'JetBrains Mono',monospace" },
-  nav: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '12px 8px', overflowY: 'auto' },
+  nav: {
+    flex: 1, display: 'flex', flexDirection: 'column', gap: 2,
+    padding: '12px 8px', overflowY: 'auto',
+  },
   navLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '9px 10px',
-    borderRadius: 8,
-    color: C.textSecondary,
-    textDecoration: 'none',
-    fontSize: 13.5,
-    fontWeight: 500,
+    display: 'flex', alignItems: 'center', gap: 10,
+    padding: '9px 10px', borderRadius: 8, color: C.textSec,
+    textDecoration: 'none', fontSize: 13.5, fontWeight: 500,
     transition: 'background 150ms, color 150ms',
-    position: 'relative',
-    animation: 'slideIn 300ms both',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
+    position: 'relative', animation: 'slideIn 300ms both',
+    whiteSpace: 'nowrap', overflow: 'hidden',
+    border: '1px solid transparent',
   },
   navLinkActive: {
-    background: C.brandGlow,
-    color: '#8ba7ff',
+    background: C.brandGlow, color: '#8ba7ff',
     border: `1px solid rgba(59,97,245,0.2)`,
   },
-  navIcon: {
-    width: 18,
-    height: 18,
-    flexShrink: 0,
-    opacity: 0.65,
-    transition: 'opacity 150ms',
-  },
+  navIcon: { width: 18, height: 18, flexShrink: 0, opacity: 0.6, transition: 'opacity 150ms' },
   navIconActive: { opacity: 1 },
   navLabel: { flex: 1 },
-  navActivePip: {
-    width: 5,
-    height: 5,
-    borderRadius: '50%',
-    background: C.brand,
-    boxShadow: `0 0 6px ${C.brand}`,
+  navPip: { width: 5, height: 5, borderRadius: '50%', background: C.brand, boxShadow: `0 0 6px ${C.brand}` },
+  backBtn: {
+    display: 'flex', alignItems: 'center', gap: 8, margin: '0 8px 8px',
+    padding: '8px 10px', borderRadius: 8, background: 'transparent',
+    border: `1px solid ${C.border}`, color: C.textMuted,
+    cursor: 'pointer', fontSize: 12, fontFamily: "'DM Sans',sans-serif",
+    transition: 'background 150ms, color 150ms',
   },
   sidebarFooter: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '12px 16px',
-    borderTop: `1px solid ${C.border}`,
-    marginTop: 'auto',
+    display: 'flex', alignItems: 'center', gap: 10,
+    padding: '12px 14px', borderTop: `1px solid ${C.border}`,
   },
   avatar: {
-    width: 30,
-    height: 30,
-    borderRadius: '50%',
+    width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
     background: `linear-gradient(135deg, ${C.brand}, #6089ff)`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 12,
-    fontWeight: 700,
-    color: '#fff',
-    flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 12, fontWeight: 700, color: '#fff',
   },
   userInfo: { display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 },
   userName: { fontSize: 12, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  userRole: { fontSize: 10, color: C.brand, textTransform: 'uppercase', letterSpacing: '0.05em' },
+  userRole: { fontSize: 10, color: C.brand, textTransform: 'uppercase', letterSpacing: '0.04em' },
+  logoutBtn: {
+    background: 'transparent', border: 'none', cursor: 'pointer',
+    color: C.textMuted, padding: 4, borderRadius: 4, flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transition: 'color 150ms',
+  },
   main: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    position: 'relative',
-    zIndex: 5,
+    flex: 1, display: 'flex', flexDirection: 'column',
+    overflow: 'hidden', position: 'relative', zIndex: 5,
   },
   topBar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 28px',
-    borderBottom: `1px solid ${C.border}`,
-    background: 'rgba(8,12,20,0.8)',
-    backdropFilter: 'blur(10px)',
-    flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '12px 28px', borderBottom: `1px solid ${C.border}`,
+    background: 'rgba(8,12,20,0.8)', backdropFilter: 'blur(10px)', flexShrink: 0,
   },
   breadcrumb: { display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'JetBrains Mono',monospace", fontSize: 13 },
-  breadcrumbRoot: { color: C.brand },
-  breadcrumbSep: { color: C.textMuted },
-  breadcrumbCurrent: { color: C.text },
-  topBarActions: { display: 'flex', alignItems: 'center', gap: 12 },
-  envBadge: {
+  bcRoot: { color: C.brand },
+  bcSep: { color: C.textMuted },
+  bcPage: { color: C.text },
+  topRight: { display: 'flex', alignItems: 'center', gap: 12 },
+  envChip: {
     display: 'flex', alignItems: 'center', gap: 6,
     background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 6,
-    padding: '4px 10px', fontSize: 11, color: C.textSecondary,
+    padding: '4px 10px', fontSize: 11, color: C.textSec,
     fontFamily: "'JetBrains Mono',monospace",
   },
   envDot: { width: 6, height: 6, borderRadius: '50%', background: C.success },
-  timeBadge: {
-    fontSize: 11, color: C.textMuted, fontFamily: "'JetBrains Mono',monospace",
-  },
-  outlet: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '24px 28px',
-  },
+  timeClock: { fontSize: 11, color: C.textMuted, fontFamily: "'JetBrains Mono',monospace" },
+  content: { flex: 1, overflowY: 'auto', padding: '24px 28px' },
 };

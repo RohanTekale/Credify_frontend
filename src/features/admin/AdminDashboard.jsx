@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import {
-  LayoutDashboard, Users, CreditCard, Shield, LogOut,
+  LayoutDashboard, Users, CreditCard, Shield, LogOut,Terminal,
   CheckCircle2, XCircle, AlertTriangle, UserCheck, UserX,
   Lock, Unlock, ChevronRight, RefreshCw, Search, Filter,
   TrendingUp, Activity, BarChart3, Eye, Hash, Globe,
@@ -243,9 +243,10 @@ const NAV = [
   { id: 'cards',     icon: CreditCard,      label: 'Cards'       },
   { id: 'kyc',       icon: Shield,          label: 'KYC Review'  },
   { id: 'analytics', icon: BarChart3,       label: 'Analytics'   },
+  { id: '__dev__',   icon: Terminal,        label: 'Dev Panel',  isDevLink: true },
 ];
 
-const Sidebar = ({ active, setActive, onLogout }) => (
+const Sidebar = ({ active, setActive, onLogout,navigate }) => (
   <aside style={{ width: 230, flexShrink: 0, background: BG_CARD, borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', padding: '20px 12px', minHeight: '100vh' }}>
     {/* Logo */}
     <div style={{ padding: '4px 10px', marginBottom: 24 }}>
@@ -272,8 +273,38 @@ const Sidebar = ({ active, setActive, onLogout }) => (
     <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_3, letterSpacing: '0.1em', padding: '0 10px', marginBottom: 8, textTransform: 'uppercase' }}>Management</div>
 
     <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {NAV.map(({ id, icon: Icon, label }) => {
+      {NAV.map(({ id, icon: Icon, label, isLink, to, accent }) => {
         const isActive = active === id;
+
+        if (isLink) {
+          // Separator line before Dev Panel
+          return (
+            <React.Fragment key={id}>
+              <div style={{ height: 1, background: BORDER, margin: '8px 4px' }} />
+              <button
+                onClick={() => navigate(to)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 10,
+                  background: 'rgba(59,97,245,0.1)',
+                  border: '1px solid rgba(59,97,245,0.25)',
+                  color: '#8ba7ff',
+                  cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700,
+                  transition: 'all 0.15s', textAlign: 'left', width: '100%',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(59,97,245,0.18)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(59,97,245,0.1)'}
+              >
+                <Icon size={15} style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{label}</span>
+                <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(59,97,245,0.25)', color: '#8ba7ff', padding: '2px 5px', borderRadius: 4, letterSpacing: '0.06em' }}>
+                  ADMIN
+                </span>
+              </button>
+            </React.Fragment>
+          );
+        }
+
         return (
           <button key={id} onClick={() => setActive(id)} style={{
             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10,
@@ -281,9 +312,9 @@ const Sidebar = ({ active, setActive, onLogout }) => (
             color: isActive ? ACCENT : TEXT_2, cursor: 'pointer', fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: isActive ? 700 : 500,
             transition: 'all 0.15s', textAlign: 'left', width: '100%',
           }}>
-            <Icon size={15} style={{ flexShrink: 0 }}/>
+            <Icon size={15} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1 }}>{label}</span>
-            {isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }}/>}
+            {isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }} />}
           </button>
         );
       })}
@@ -891,7 +922,7 @@ const AdminDashboard = () => {
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', background: BG_DEEP, fontFamily: FONT_DISPLAY }}>
-        <Sidebar active={tab} setActive={setTab} onLogout={handleLogout}/>
+        <Sidebar active={tab} setActive={setTab} onLogout={handleLogout} navigate={navigate}/>
 
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 48px' }}>
           <div style={{ maxWidth: 1180, margin: '0 auto' }}>
