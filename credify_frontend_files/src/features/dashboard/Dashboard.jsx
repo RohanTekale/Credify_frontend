@@ -39,7 +39,7 @@ const ProgressBar = ({ pct, color, delay = 0, height = 5 }) => {
   const [w, setW] = useState(0);
   useEffect(() => { const t = setTimeout(() => setW(pct), delay + 300); return () => clearTimeout(t); }, [pct, delay]);
   return (
-    <div style={{ height, borderRadius: 99, background: 'var(--progress-track)', overflow: 'hidden' }}>
+    <div style={{ height, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
       <div style={{ height: '100%', width: `${w}%`, borderRadius: 99, background: color, transition: 'width 1.2s cubic-bezier(0.16,1,0.3,1)', boxShadow: `0 0 8px ${color}55` }} />
     </div>
   );
@@ -175,8 +175,8 @@ const MetricCard = ({ label, value, sub, subPos, color, icon: Icon, sparkData, d
 
   return (
     <div
-      className="animate-fade-up metric-card"
-      style={{ padding: '20px 22px', borderRadius: 20, position: 'relative', overflow: 'hidden', cursor: 'default', background: 'var(--dash-metric-bg)', border: '1px solid var(--dash-metric-border)', boxShadow: 'var(--dash-metric-shadow)', transition: 'transform 0.25s,box-shadow 0.25s,border-color 0.25s', animationDelay: `${delay}ms` }}
+      className="animate-fade-up"
+      style={{ padding: '20px 22px', borderRadius: 20, position: 'relative', overflow: 'hidden', cursor: 'default', background: 'linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 30px rgba(0,0,0,0.4)', transition: 'transform 0.25s,box-shadow 0.25s,border-color 0.25s', animationDelay: `${delay}ms` }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = `0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px ${color}25`; e.currentTarget.style.borderColor = `${color}25`; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 30px rgba(0,0,0,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
     >
@@ -191,8 +191,8 @@ const MetricCard = ({ label, value, sub, subPos, color, icon: Icon, sparkData, d
         </div>
         <span style={{ fontSize: 9, fontWeight: 700, color, background: `${color}14`, border: `1px solid ${color}25`, borderRadius: 20, padding: '2px 8px', letterSpacing: '0.06em' }}>LIVE</span>
       </div>
-      <div className="metric-value" style={{ fontSize: 'clamp(1.3rem,2vw,1.6rem)', fontWeight: 800, fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em', color: 'var(--metric-value-color)', marginBottom: 3 }}>{display}</div>
-      <div className="metric-label" style={{ fontSize: 11, color: 'var(--metric-label-color)', fontWeight: 500, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 'clamp(1.3rem,2vw,1.6rem)', fontWeight: 800, fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em', color: '#f0f4ff', marginBottom: 3 }}>{display}</div>
+      <div style={{ fontSize: 11, color: 'rgba(240,244,255,0.45)', fontWeight: 500, marginBottom: 6 }}>{label}</div>
       {sub && <div style={{ fontSize: 10, fontWeight: 600, color: subPos ? '#10b981' : '#f59e0b' }}>{sub}</div>}
       {sparkData && <div style={{ marginTop: 10, opacity: 0.75 }}><Spark data={sparkData} color={color} /></div>}
     </div>
@@ -204,19 +204,19 @@ const TxRow = ({ desc, card, date, status, amount, positive, category, delay }) 
   const CAT_COLOR = { food: '#f59e0b', salary: '#10b981', shopping: '#8b5cf6', reward: '#ec4899', subscription: '#06b6d4', transfer: '#3b61f5', refund: '#10b981' };
   const c = CAT_COLOR[category?.toLowerCase()] || '#3b61f5';
   return (
-    <div className="animate-fade-up tx-row" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid var(--dash-row-divider)', animationDelay: `${delay}ms`, transition: 'background 150ms, padding 150ms, margin 150ms, border-radius 150ms' }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'var(--dash-row-hover)'; e.currentTarget.style.margin = '0 -12px'; e.currentTarget.style.padding = '12px 12px'; e.currentTarget.style.borderRadius = '10px'; }}
+    <div className="animate-fade-up" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', animationDelay: `${delay}ms`, transition: 'background 150ms, padding 150ms, margin 150ms, border-radius 150ms' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; e.currentTarget.style.margin = '0 -12px'; e.currentTarget.style.padding = '12px 12px'; e.currentTarget.style.borderRadius = '10px'; }}
       onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.margin = ''; e.currentTarget.style.padding = '12px 0'; e.currentTarget.style.borderRadius = ''; }}
     >
       <div style={{ width: 40, height: 40, borderRadius: 12, background: `${c}12`, border: `1px solid ${c}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {positive ? <ArrowDownLeft size={15} color={c} /> : <ArrowUpRight size={15} color={c} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx-title-color)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
-        <div style={{ fontSize: 10, color: 'var(--tx-sub-color)' }}>{date}{card && ` · ••••${card.slice(-4)}`}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f4ff', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
+        <div style={{ fontSize: 10, color: 'rgba(240,244,255,0.35)' }}>{date}{card && ` · ••••${card.slice(-4)}`}</div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono,monospace', color: positive ? '#10b981' : 'var(--tx-amount-color)' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono,monospace', color: positive ? '#10b981' : '#f0f4ff' }}>
           {positive ? '+' : '−'}₹{Math.abs(parseFloat(amount || 0)).toFixed(2)}
         </div>
         <Badge status={status || 'success'} style={{ marginTop: 3 }} />
@@ -243,8 +243,8 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
   return (
     <aside style={{
       width: 240, flexShrink: 0,
-      background: 'var(--dash-sidebar-bg)',
-      borderRight: '1px solid var(--dash-border)',
+      background: 'rgba(6,8,18,0.97)',
+      borderRight: '1px solid rgba(255,255,255,0.06)',
       display: 'flex', flexDirection: 'column',
       padding: '0 0 16px',
       position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
@@ -255,7 +255,7 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
           <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#3b61f5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(59,97,245,0.4)' }}>
             <CreditCard size={15} color="#fff" />
           </div>
-          <span style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 17, color: 'var(--dash-text-primary)', letterSpacing: '-0.03em' }}>Credify</span>
+          <span style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 17, color: '#f0f4ff', letterSpacing: '-0.03em' }}>Credify</span>
         </div>
       </div>
 
@@ -269,14 +269,14 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
               onClick={() => setActive(id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                borderRadius: 11, background: isActive ? 'var(--dash-link-active-bg)' : 'transparent',
-                border: `1px solid ${isActive ? 'var(--dash-link-active-border)' : 'transparent'}`,
-                color: isActive ? 'var(--dash-link-active)' : 'var(--dash-link-inactive)',
+                borderRadius: 11, background: isActive ? 'rgba(59,97,245,0.14)' : 'transparent',
+                border: `1px solid ${isActive ? 'rgba(59,97,245,0.28)' : 'transparent'}`,
+                color: isActive ? '#7aa3ff' : 'rgba(240,244,255,0.45)',
                 cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', fontSize: 13, fontWeight: isActive ? 600 : 500,
                 transition: 'all 0.18s ease', width: '100%', position: 'relative',
               }}
-              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(59,97,245,0.06)'; e.currentTarget.style.color = 'var(--dash-text-primary)'; } }}
-              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--dash-link-inactive)'; } }}
+              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(240,244,255,0.75)'; } }}
+              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(240,244,255,0.45)'; } }}
             >
               {isActive && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 18, borderRadius: '0 3px 3px 0', background: '#3b61f5', boxShadow: '0 0 8px rgba(59,97,245,0.7)' }} />}
               <Icon size={15} style={{ flexShrink: 0 }} />
@@ -290,14 +290,14 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
       </nav>
 
       {/* Bottom — user + logout */}
-      <div style={{ margin: '16px 10px 0', padding: '14px', borderRadius: 14, background: 'var(--dash-user-pill-bg)', border: '1px solid var(--dash-user-pill-border)' }}>
+      <div style={{ margin: '16px 10px 0', padding: '14px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${avatarColor},${avatarColor}bb)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', fontFamily: 'Sora,sans-serif', flexShrink: 0, boxShadow: `0 4px 12px ${avatarColor}50` }}>
             {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--dash-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</div>
-            <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#f0f4ff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</div>
+            <div style={{ fontSize: 10, color: 'rgba(240,244,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
           </div>
           <button onClick={onLogout} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,244,255,0.3)', padding: 4, borderRadius: 7, transition: 'all 0.15s', flexShrink: 0 }}
             onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
@@ -368,7 +368,7 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
           <h1 style={{ fontSize: 'clamp(1.3rem,2.5vw,1.8rem)', margin: '0 0 4px', letterSpacing: '-0.03em' }}>
             {greeting}, <span className="gradient-text">{user?.username || 'User'}</span> 👋
           </h1>
-          <div style={{ fontSize: 12, color: 'var(--dash-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 12, color: 'rgba(240,244,255,0.4)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.8)' }} />
             All systems operational · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
@@ -385,7 +385,7 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
 
       {/* KPI Grid */}
       {loading
-        ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>{[0, 1, 2, 3].map(i => <div key={i} style={{ height: 140, borderRadius: 20, background: 'var(--shimmer-bg)', animation: 'shimmer 1.5s ease-in-out infinite' }} />)}</div>
+        ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>{[0, 1, 2, 3].map(i => <div key={i} style={{ height: 140, borderRadius: 20, background: 'rgba(255,255,255,0.04)', animation: 'shimmer 1.5s ease-in-out infinite' }} />)}</div>
         : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
           {KPIS.map((k, i) => <MetricCard key={i} {...k} go={go} />)}
         </div>
@@ -397,11 +397,11 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
         {/* COL 1 — Card + Spend */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Card panel */}
-          <div className="animate-fade-up delay-200 panel-card" style={{ padding: 22, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
+          <div className="animate-fade-up delay-200" style={{ padding: 22, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 28px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>My Virtual Card</div>
-                <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', marginTop: 2 }}>Hover to interact · click to reveal</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>My Virtual Card</div>
+                <div style={{ fontSize: 10, color: 'rgba(240,244,255,0.28)', marginTop: 2 }}>Hover to interact · click to reveal</div>
               </div>
               <button onClick={() => {}} style={{ fontSize: 11, color: '#6089ff', background: 'rgba(59,97,245,0.1)', border: '1px solid rgba(59,97,245,0.2)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: 'Sora,sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                 Manage <ArrowRight size={10} />
@@ -420,8 +420,8 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
             {featuredCard && (
               <div style={{ marginTop: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-                  <span style={{ fontSize: 11, color: 'var(--dash-text-muted)' }}>Credit Used</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-primary)', fontFamily: 'JetBrains Mono,monospace' }}>
+                  <span style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>Credit Used</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#f0f4ff', fontFamily: 'JetBrains Mono,monospace' }}>
                     ₹{((featuredCard.credit_limit || 0) - (featuredCard.available_credit || 0)).toLocaleString()} / ₹{Number(featuredCard.credit_limit || 0).toLocaleString()}
                   </span>
                 </div>
@@ -434,23 +434,23 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
                   <span style={{ fontSize: 10, color: '#10b981', fontWeight: 600 }}>
                     {featuredCard.credit_limit ? `${Math.round(((featuredCard.credit_limit - featuredCard.available_credit) / featuredCard.credit_limit) * 100)}% used` : '23% used'}
                   </span>
-                  <span style={{ fontSize: 10, color: 'var(--dash-text-muted)' }}>₹{Number(featuredCard.available_credit || 76860).toLocaleString()} available</span>
+                  <span style={{ fontSize: 10, color: 'rgba(240,244,255,0.4)' }}>₹{Number(featuredCard.available_credit || 76860).toLocaleString()} available</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Spend breakdown */}
-          <div className="animate-fade-up delay-300 panel-card" style={{ padding: 22, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
+          <div className="animate-fade-up delay-300" style={{ padding: 22, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 28px rgba(0,0,0,0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Spend by Category</div>
-              <span style={{ fontSize: 10, color: 'var(--dash-text-muted)', background: 'rgba(59,97,245,0.06)', border: '1px solid rgba(59,97,245,0.1)', borderRadius: 7, padding: '3px 8px' }}>This month</span>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Spend by Category</div>
+              <span style={{ fontSize: 10, color: 'rgba(240,244,255,0.35)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '3px 8px' }}>This month</span>
             </div>
             {SPENDS.map(({ label, pct, color, amount }, i) => (
               <div key={i} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 12, color: 'var(--dash-text-secondary)', fontWeight: 500 }}>{label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-primary)', fontFamily: 'JetBrains Mono,monospace' }}>{amount}</span>
+                  <span style={{ fontSize: 12, color: 'rgba(240,244,255,0.55)', fontWeight: 500 }}>{label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#f0f4ff', fontFamily: 'JetBrains Mono,monospace' }}>{amount}</span>
                 </div>
                 <ProgressBar pct={pct} color={color} delay={i * 120} />
               </div>
@@ -459,9 +459,9 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
         </div>
 
         {/* COL 2 — Transactions */}
-        <div className="animate-fade-up delay-200 panel-card" style={{ padding: 22, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
+        <div className="animate-fade-up delay-200" style={{ padding: 22, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 28px rgba(0,0,0,0.4)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Recent Activity</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Recent Activity</div>
             <button style={{ fontSize: 11, color: '#6089ff', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Sora,sans-serif', fontWeight: 600 }}>
               View all <ArrowRight size={10} />
             </button>
@@ -485,8 +485,8 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Quick Actions */}
-          <div className="animate-fade-up delay-300 panel-card" style={{ padding: 18, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Quick Actions</div>
+          <div className="animate-fade-up delay-300" style={{ padding: 18, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 28px rgba(0,0,0,0.4)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Quick Actions</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {[
                 { icon: Plus,         label: 'New Card',  color: '#3b61f5' },
@@ -498,28 +498,28 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
               ].map(({ icon: Icon, label, color }) => (
                 <button
                   key={label}
-                  style={{ padding: '12px 8px', borderRadius: 13, background: 'var(--quick-action-bg)', border: '1px solid var(--quick-action-border)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', fontFamily: 'DM Sans,sans-serif' }}
+                  style={{ padding: '12px 8px', borderRadius: 13, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', fontFamily: 'DM Sans,sans-serif' }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${color}10`; e.currentTarget.style.borderColor = `${color}28`; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--quick-action-bg)'; e.currentTarget.style.borderColor = 'var(--quick-action-border)'; e.currentTarget.style.transform = 'none'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'none'; }}
                 >
                   <div style={{ width: 34, height: 34, borderRadius: 10, background: `${color}16`, border: `1px solid ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon size={14} color={color} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--quick-action-label)', fontFamily: 'Sora,sans-serif' }}>{label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(240,244,255,0.55)', fontFamily: 'Sora,sans-serif' }}>{label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Rewards */}
-          <div className="animate-fade-up delay-400" style={{ padding: 20, borderRadius: 20, position: 'relative', overflow: 'hidden', background: 'var(--rewards-bg)', border: '1px solid var(--rewards-border)', boxShadow: '0 4px 28px rgba(0,0,0,0.25)' }}>
+          <div className="animate-fade-up delay-400" style={{ padding: 20, borderRadius: 20, position: 'relative', overflow: 'hidden', background: 'linear-gradient(145deg,#130a2e,#0a0518)', border: '1px solid rgba(139,92,246,0.22)', boxShadow: '0 4px 28px rgba(0,0,0,0.5)' }}>
             <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(139,92,246,0.2)', filter: 'blur(40px)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(236,72,153,0.1)', filter: 'blur(28px)', pointerEvents: 'none' }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                 <div>
                   <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(167,139,250,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Rewards Balance</div>
-                  <div style={{ fontSize: '1.7rem', fontWeight: 800, fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em', color: 'var(--rewards-title)', lineHeight: 1 }}>
+                  <div style={{ fontSize: '1.7rem', fontWeight: 800, fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em', color: '#fff', lineHeight: 1 }}>
                     4,820 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>pts</span>
                   </div>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>≈ ₹482 cashback value</div>
@@ -553,8 +553,8 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
                 <Shield size={15} color="#10b981" />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--secured-label)', marginBottom: 1 }}>Account Secured</div>
-                <div style={{ fontSize: 10, color: 'var(--secured-sub)' }}>KYC verified · 2FA active</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f4ff', marginBottom: 1 }}>Account Secured</div>
+                <div style={{ fontSize: 10, color: 'rgba(240,244,255,0.4)' }}>KYC verified · 2FA active</div>
               </div>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.7)', animation: 'pulse-glow 2.2s ease-in-out infinite', flexShrink: 0 }} />
             </div>
@@ -562,7 +562,7 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
 
           {/* Upcoming bills teaser */}
           <div className="animate-fade-up delay-500" style={{ padding: '16px 18px', borderRadius: 14, background: 'linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.02))', border: '1px solid rgba(245,158,11,0.14)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Upcoming Bills</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Upcoming Bills</div>
             {[
               { name: 'Netflix', date: 'Apr 20', amount: '₹649', color: '#ef4444' },
               { name: 'Spotify', date: 'Apr 22', amount: '₹119', color: '#1db954' },
@@ -570,11 +570,11 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
               <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
-                  <span style={{ fontSize: 12, color: 'var(--bill-name)', fontWeight: 500 }}>{name}</span>
+                  <span style={{ fontSize: 12, color: '#f0f4ff', fontWeight: 500 }}>{name}</span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bill-amount)', fontFamily: 'JetBrains Mono,monospace' }}>{amount}</div>
-                  <div style={{ fontSize: 9, color: 'var(--bill-date)' }}>{date}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f0f4ff', fontFamily: 'JetBrains Mono,monospace' }}>{amount}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(240,244,255,0.35)' }}>{date}</div>
                 </div>
               </div>
             ))}
@@ -905,25 +905,25 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)', fontFamily: 'DM Sans,sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#080c14', fontFamily: 'DM Sans,sans-serif' }}>
       {/* Ambient background */}
-      <div style={{ position: 'fixed', top: '-10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,var(--glow-1) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'fixed', bottom: '-5%', right: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,var(--glow-2) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', top: '-10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,97,245,0.07) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: '-5%', right: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,rgba(139,92,246,0.05) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <Sidebar active={tab} setActive={setTab} onLogout={handleLogout} user={user} />
 
       <main style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
         {/* Top bar */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 28px', background: 'var(--navbar-bg)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--dash-border)' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 28px', background: 'rgba(8,12,20,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dash-text-muted)', textTransform: 'capitalize' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(240,244,255,0.4)', textTransform: 'capitalize' }}>
               {NAV.find(n => n.id === tab)?.label || 'Overview'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={refresh} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 9, padding: '7px 13px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans,sans-serif', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(59,97,245,0.3)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+            <button onClick={refresh} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 9, padding: '7px 13px', color: 'rgba(240,244,255,0.5)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans,sans-serif', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#f0f4ff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(240,244,255,0.5)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}
             >
               <RefreshCw size={12} /> Refresh
             </button>
@@ -940,7 +940,8 @@ export default function Dashboard() {
         @keyframes shimmer { 0%,100%{opacity:0.6} 50%{opacity:1} }
         @keyframes spin { to{transform:rotate(360deg)} }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(59,97,245,0.2); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+        select option { background: #0d1321; }
       `}</style>
     </div>
   );

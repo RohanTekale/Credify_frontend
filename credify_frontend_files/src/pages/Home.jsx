@@ -1,5 +1,5 @@
-// src/pages/Home.jsx — Premium Apple/Stripe-level experience
-import React, { useEffect, useRef, useState } from 'react';
+// src/pages/Home.jsx — Ultra-Premium Apple-Style Redesign
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Shield, Zap, TrendingUp, Users, CreditCard,
@@ -7,18 +7,22 @@ import {
   Sparkles, BarChart3, Smartphone, RefreshCw, HeartHandshake,
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
+import { useState } from 'react';
 
 /* ── Animated Counter ─────────────────────────────────────────────────────── */
 const AnimatedNumber = ({ target, suffix = '', prefix = '' }) => {
   const [display, setDisplay] = useState(0);
   const ref = useRef(null);
   const started = useRef(false);
+
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !started.current) {
         started.current = true;
         const numeric = parseFloat(target.replace(/[^0-9.]/g, ''));
-        const duration = 1800; const steps = 60; const increment = numeric / steps;
+        const duration = 1800;
+        const steps = 60;
+        const increment = numeric / steps;
         let current = 0;
         const timer = setInterval(() => {
           current += increment;
@@ -30,156 +34,17 @@ const AnimatedNumber = ({ target, suffix = '', prefix = '' }) => {
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [target]);
+
   const formatted = Number.isInteger(Number(display)) ? display : display.toFixed(1);
   return <span ref={ref}>{prefix}{formatted}{suffix}</span>;
 };
 
-/* ── Letter-by-Letter Name Animation ─────────────────────────────────────── */
-const AnimatedName = ({ name, baseDelay = 0.55 }) => {
-  return (
-    <span style={{ display:'inline', position:'relative' }}>
-      {name.split('').map((char, i) => (
-        <span
-          key={i}
-          className="animate-letter-in"
-          style={{
-            display:'inline-block',
-            background:'linear-gradient(135deg,#3b61f5 0%,#7c3aed 45%,#06b6d4 100%)',
-            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-            animationDelay:`${baseDelay + i * 0.045}s`,
-            animationFillMode:'both',
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      ))}
-    </span>
-  );
-};
-
-/* ── 3D Hero Card ─────────────────────────────────────────────────────────── */
-const HeroCard3D = ({ user }) => {
-  const cardRef = useRef(null);
-  const [rot, setRot] = useState({ x: 4, y: -6 });
-  const [shine, setShine] = useState({ x: 50, y: 30 });
-  const [hovered, setHovered] = useState(false);
-  const animRef = useRef(null);
-  const autoAngle = useRef(0);
-
-  // Continuous slow auto-rotation when not hovered
-  useEffect(() => {
-    const tick = () => {
-      if (!hovered) {
-        autoAngle.current += 0.3;
-        const a = autoAngle.current * (Math.PI / 180);
-        setRot({ x: Math.sin(a * 0.4) * 8, y: Math.sin(a) * 12 });
-        setShine({ x: 50 + Math.sin(a) * 25, y: 30 + Math.sin(a * 0.5) * 15 });
-      }
-      animRef.current = requestAnimationFrame(tick);
-    };
-    animRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [hovered]);
-
-  const onMove = (e) => {
-    const el = cardRef.current; if (!el) return;
-    const { left, top, width, height } = el.getBoundingClientRect();
-    const cx = (e.clientX - left) / width, cy = (e.clientY - top) / height;
-    setRot({ x: (cy - 0.5) * -22, y: (cx - 0.5) * 22 });
-    setShine({ x: cx * 100, y: cy * 100 });
-  };
-  const onLeave = () => { setHovered(false); };
-
-  const cardName = user?.first_name
-    ? `${user.first_name} ${user.last_name || ''}`.trim()
-    : user?.username || 'Your Name';
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={onMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={onLeave}
-      style={{
-        width:340, height:214,
-        borderRadius:22,
-        transform:`perspective(1000px) rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(${hovered ? 1.04 : 1})`,
-        transition: hovered ? 'transform 0.04s linear' : 'transform 1s cubic-bezier(0.16,1,0.3,1)',
-        transformStyle:'preserve-3d',
-        cursor:'pointer', position:'relative', willChange:'transform',
-        zIndex:2,
-      }}
-    >
-      {/* Card body */}
-      <div style={{
-        position:'absolute', inset:0, borderRadius:22,
-        background:'linear-gradient(145deg,#1a2a6c 0%,#0d1660 40%,#0a1a3a 100%)',
-        border:'1px solid rgba(255,255,255,0.15)',
-        boxShadow:`0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(59,97,245,0.3), inset 0 1px 0 rgba(255,255,255,0.12)`,
-        overflow:'hidden',
-      }}>
-        {/* Holographic shine */}
-        <div style={{
-          position:'absolute', inset:0,
-          background:`radial-gradient(ellipse at ${shine.x}% ${shine.y}%, rgba(99,145,255,0.35) 0%, rgba(99,145,255,0.1) 35%, transparent 65%)`,
-          transition: hovered ? 'none' : 'background 0.8s ease',
-          pointerEvents:'none',
-        }} />
-        {/* Top gloss */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, height:'50%', background:'linear-gradient(180deg,rgba(255,255,255,0.07) 0%,transparent 100%)', pointerEvents:'none', borderRadius:'22px 22px 0 0' }} />
-        {/* Subtle grid */}
-        <div style={{ position:'absolute', inset:0, backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.01) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.01) 29px)', pointerEvents:'none' }} />
-        {/* Glow orb top-right */}
-        <div style={{ position:'absolute', top:-40, right:-30, width:160, height:160, borderRadius:'50%', background:'rgba(59,97,245,0.25)', filter:'blur(45px)', pointerEvents:'none' }} />
-
-        <div style={{ position:'relative', zIndex:1, padding:'20px 26px', height:'100%', display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
-          {/* Row 1 */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <div style={{ fontFamily:'Sora,sans-serif', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.35)', letterSpacing:'0.12em', textTransform:'uppercase' }}>
-              CREDIFY VIRTUAL
-            </div>
-            {/* Chip */}
-            <div style={{ display:'flex' }}>
-              <div style={{ width:38, height:38, borderRadius:'50%', background:'rgba(59,97,245,0.45)', border:'1px solid rgba(59,97,245,0.7)' }} />
-              <div style={{ width:38, height:38, borderRadius:'50%', background:'rgba(255,200,50,0.3)', border:'1px solid rgba(255,200,50,0.5)', marginLeft:-16 }} />
-            </div>
-          </div>
-
-          {/* EMV chip */}
-          <div style={{ width:36, height:28, borderRadius:6, background:'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.2)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:2, padding:4 }}>
-            {[0,1,2,3].map(i => <div key={i} style={{ background:'rgba(0,0,0,0.28)', borderRadius:2 }} />)}
-          </div>
-
-          {/* Card number */}
-          <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:16, color:'rgba(255,255,255,0.88)', letterSpacing:'0.2em', textShadow:'0 2px 10px rgba(0,0,0,0.4)' }}>
-            4829 •••• •••• 7234
-          </div>
-
-          {/* Bottom row */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
-            <div>
-              <div style={{ fontSize:8, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:3 }}>Card Holder</div>
-              <div style={{ fontFamily:'Sora,sans-serif', fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', textTransform:'uppercase', letterSpacing:'0.04em' }}>
-                {cardName.toUpperCase()}
-              </div>
-            </div>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:8, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:3 }}>Expires</div>
-              <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color:'rgba(255,255,255,0.85)' }}>12/28</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 /* ── Data ─────────────────────────────────────────────────────────────────── */
 const STATS = [
-  { label:'Active Users',           value:'12K',  suffix:'+',  icon:Users,      color:'#3b61f5' },
-  { label:'Transactions Processed', value:'2.4',  suffix:'M+', prefix:'$', icon:TrendingUp, color:'#8b5cf6' },
-  { label:'Cards Issued',           value:'38K',  suffix:'+',  icon:CreditCard, color:'#06b6d4' },
-  { label:'Uptime Guaranteed',      value:'99.9', suffix:'%',  icon:Zap,        color:'#10b981' },
+  { label: 'Active Users',           value: '12K',  suffix: '+',  icon: Users,      color: '#3b61f5' },
+  { label: 'Transactions Processed', value: '2.4',  suffix: 'M+', prefix: '$', icon: TrendingUp, color: '#8b5cf6' },
+  { label: 'Cards Issued',           value: '38K',  suffix: '+',  icon: CreditCard, color: '#06b6d4' },
+  { label: 'Uptime Guaranteed',      value: '99.9', suffix: '%',  icon: Zap,        color: '#10b981' },
 ];
 const STEPS = [
   { step:'01', icon:Users,      color:'#3b61f5', title:'Create Your Account',   desc:'Sign up in seconds. Complete a quick KYC verification to unlock full card management capabilities.' },
@@ -214,12 +79,12 @@ const Home = () => {
   const isLoggedIn = !!token;
   const displayName = user?.first_name || user?.username || 'there';
 
+  // Parallax — RAF-based, smooth lerp, no jitter
   const bgRef1 = useRef(null);
   const bgRef2 = useRef(null);
-  const glowRef = useRef(null);
   const rafId  = useRef(null);
-  const mSmooth = useRef({ x:0, y:0 });
-  const mTarget = useRef({ x:0, y:0 });
+  const mSmooth = useRef({ x: 0, y: 0 });
+  const mTarget = useRef({ x: 0, y: 0 });
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -229,20 +94,15 @@ const Home = () => {
       mTarget.current.x = (e.clientX / window.innerWidth  - 0.5) * 2;
       mTarget.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
     };
-    window.addEventListener('mousemove', onMove, { passive:true });
+    window.addEventListener('mousemove', onMove, { passive: true });
 
     const tick = () => {
       const l = 0.055;
       mSmooth.current.x += (mTarget.current.x - mSmooth.current.x) * l;
       mSmooth.current.y += (mTarget.current.y - mSmooth.current.y) * l;
       const { x, y } = mSmooth.current;
-      if (bgRef1.current) bgRef1.current.style.transform = `translate(${x*13}px,${y*13}px)`;
-      if (bgRef2.current) bgRef2.current.style.transform = `translate(${x*-11}px,${y*-11}px)`;
-      if (glowRef.current) {
-        const gx = 50 + x * 15;
-        const gy = 50 + y * 10;
-        glowRef.current.style.background = `radial-gradient(ellipse at ${gx}% ${gy}%, rgba(59,97,245,0.13) 0%, rgba(139,92,246,0.06) 40%, transparent 70%)`;
-      }
+      if (bgRef1.current) bgRef1.current.style.transform = `translate(${x * 13}px,${y * 13}px)`;
+      if (bgRef2.current) bgRef2.current.style.transform = `translate(${x * -11}px,${y * -11}px)`;
       rafId.current = requestAnimationFrame(tick);
     };
     rafId.current = requestAnimationFrame(tick);
@@ -250,9 +110,9 @@ const Home = () => {
   }, []);
 
   return (
-    <div style={{ minHeight:'calc(100vh - 64px)', paddingTop:64 }}>
+    <div style={{ minHeight: 'calc(100vh - 64px)', paddingTop: 64 }}>
 
-      {/* ── Layered background ───────────────────────────────── */}
+      {/* ── Premium layered background ───────────────────────────────── */}
       <div style={{ position:'fixed', inset:0, zIndex:0, pointerEvents:'none', background:'var(--hero-gradient)' }} />
       <div ref={bgRef1} style={{
         position:'fixed', top:'-20%', left:'-15%', width:700, height:700,
@@ -264,21 +124,16 @@ const Home = () => {
         background:'radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)',
         borderRadius:'50%', pointerEvents:'none', zIndex:0, willChange:'transform',
       }} />
-      {/* Cursor-responsive glow */}
-      <div ref={glowRef} style={{
-        position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(ellipse at 50% 50%, rgba(59,97,245,0.13) 0%, rgba(139,92,246,0.06) 40%, transparent 70%)',
-        transition:'background 0.3s ease',
-      }} />
 
       <div style={{ position:'relative', zIndex:1 }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════ */}
         <section style={{ maxWidth:1200, margin:'0 auto', padding:'64px 24px 40px' }}>
 
+          {/* Centered Hero Text */}
           <div style={{ textAlign:'center', marginBottom:60, position:'relative' }}>
 
-            {/* Subtle glow behind text */}
+            {/* Radial glow behind text */}
             <div style={{
               position:'absolute', top:'40%', left:'50%',
               transform:'translate(-50%,-50%)',
@@ -314,33 +169,34 @@ const Home = () => {
                   color:'var(--brand-400)', letterSpacing:'0.04em',
                   backdropFilter:'blur(10px)',
                 }}>
-                  <Sparkles size={11}/> TRUSTED BY 12,000+ USERS WORLDWIDE
+                  <Sparkles size={11} /> TRUSTED BY 12,000+ USERS WORLDWIDE
                 </span>
               </div>
             )}
 
-            {/* Main heading */}
-            <h1
-              className="hero-item hero-delay-1"
-              style={{
-                fontSize:'clamp(2.8rem, 7.5vw, 5.2rem)',
-                fontFamily:'Sora, sans-serif', fontWeight:800,
-                letterSpacing:'-0.04em', lineHeight:1.04,
-                margin:'0 auto 18px', maxWidth:820,
-                color:'var(--text-primary)',
-                position:'relative', zIndex:1,
-              }}
-            >
-              {isLoggedIn ? (
-                <>Welcome,{' '}<AnimatedName name={displayName} baseDelay={0.55} /></>
-              ) : (
-                <>The Modern{' '}
-                  <span style={{
-                    background:'linear-gradient(135deg,#3b61f5 0%,#7c3aed 45%,#06b6d4 100%)',
-                    WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                  }}>Virtual Card</span>{' '}Platform
-                </>
-              )}
+            {/* Main heading — LARGE */}
+            <h1 className="hero-item hero-delay-1" style={{
+              fontSize:'clamp(2.8rem, 7.5vw, 5.2rem)',
+              fontFamily:'Sora, sans-serif', fontWeight:800,
+              letterSpacing:'-0.04em', lineHeight:1.04,
+              margin:'0 auto 18px', maxWidth:800,
+              color:'var(--text-primary)',
+              position:'relative', zIndex:1,
+            }}>
+              {isLoggedIn
+                ? <>Welcome,{' '}
+                    <span style={{
+                      background:'linear-gradient(135deg,#3b61f5 0%,#7c3aed 45%,#06b6d4 100%)',
+                      WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                    }}>{displayName}</span>
+                  </>
+                : <>The Modern{' '}
+                    <span style={{
+                      background:'linear-gradient(135deg,#3b61f5 0%,#7c3aed 45%,#06b6d4 100%)',
+                      WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                    }}>Virtual Card</span>{' '}Platform
+                  </>
+              }
             </h1>
 
             {/* Subtext */}
@@ -362,7 +218,7 @@ const Home = () => {
               {isLoggedIn ? (
                 <>
                   <button className="btn-primary" style={{ fontSize:15, padding:'14px 28px' }} onClick={() => navigate('/dashboard')}>
-                    Open Dashboard <ArrowRight size={16}/>
+                    Open Dashboard <ArrowRight size={16} />
                   </button>
                   <button className="btn-secondary" style={{ fontSize:15, padding:'14px 28px' }} onClick={() => navigate('/pricing')}>
                     View Plans
@@ -371,7 +227,7 @@ const Home = () => {
               ) : (
                 <>
                   <button className="btn-primary" style={{ fontSize:15, padding:'14px 28px' }} onClick={() => navigate('/register')}>
-                    Get Started Free <ArrowRight size={16}/>
+                    Get Started Free <ArrowRight size={16} />
                   </button>
                   <button className="btn-secondary" style={{ fontSize:15, padding:'14px 28px' }} onClick={() => navigate('/login')}>
                     Sign In
@@ -381,20 +237,51 @@ const Home = () => {
             </div>
           </div>
 
-          {/* ── Card Visual + Floating Badges ──────────────────────── */}
+          {/* Floating Card Visual */}
           <div className="hero-item hero-delay-4" style={{ display:'flex', justifyContent:'center', position:'relative', marginBottom:80 }}>
-            {/* Background tilted card (depth layer) */}
+            {/* Tilted BG card */}
             <div style={{
               position:'absolute', width:300, height:178, borderRadius:18,
               background:'linear-gradient(135deg, rgba(139,92,246,0.22) 0%, rgba(6,182,212,0.13) 100%)',
               border:'1px solid rgba(255,255,255,0.1)',
-              transform:'rotate(-6deg) translateY(14px) translateX(-28px)',
+              transform:'rotate(-6deg) translateY(10px) translateX(-22px)',
               boxShadow:'0 12px 40px rgba(0,0,0,0.09)',
               backdropFilter:'blur(8px)',
             }} />
 
-            {/* 3D Card */}
-            <HeroCard3D user={user} />
+            {/* Main card */}
+            <div style={{
+              width:340, height:200, borderRadius:20,
+              background:'linear-gradient(135deg,#1a1f3c 0%,#0f1420 100%)',
+              border:'1px solid rgba(255,255,255,0.14)',
+              boxShadow:'0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(59,97,245,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+              padding:28, display:'flex', flexDirection:'column', justifyContent:'space-between',
+              position:'relative', overflow:'hidden', zIndex:2,
+              animation:'float 4s ease-in-out infinite',
+            }}>
+              <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'linear-gradient(135deg,rgba(255,255,255,0.07) 0%,transparent 60%)', borderRadius:20 }} />
+              <div style={{ position:'absolute', top:22, left:24, width:32, height:24, borderRadius:5, background:'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.2)' }} />
+              <div style={{ position:'absolute', top:20, right:24, display:'flex' }}>
+                <div style={{ width:36, height:36, borderRadius:'50%', background:'rgba(59,97,245,0.4)', border:'1px solid rgba(59,97,245,0.6)' }} />
+                <div style={{ width:36, height:36, borderRadius:'50%', background:'rgba(255,200,50,0.3)', border:'1px solid rgba(255,200,50,0.5)', marginLeft:-14 }} />
+              </div>
+              <div style={{ marginTop:28 }}>
+                <div style={{ fontFamily:'Sora,sans-serif', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.35)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:12 }}>CREDIFY VIRTUAL</div>
+                <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:16, color:'rgba(255,255,255,0.85)', letterSpacing:'0.18em', marginBottom:16 }}>4829 •••• •••• 7234</div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+                  <div>
+                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2 }}>Card Holder</div>
+                    <div style={{ fontFamily:'Sora,sans-serif', fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)' }}>
+                      {user?.first_name ? `${user.first_name} ${user.last_name||''}`.trim() : user?.username || 'Your Name'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2 }}>Expires</div>
+                    <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color:'rgba(255,255,255,0.85)' }}>12/28</div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Badge: Transaction */}
             <div style={{
@@ -407,7 +294,7 @@ const Home = () => {
               backdropFilter:'blur(20px)', animation:'floatAlt 5s ease-in-out infinite',
             }}>
               <div style={{ width:32, height:32, borderRadius:8, background:'rgba(16,185,129,0.1)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <CheckCircle size={16} color="#10b981"/>
+                <CheckCircle size={16} color="#10b981" />
               </div>
               <div>
                 <div style={{ fontSize:11, fontWeight:700, fontFamily:'Sora,sans-serif', color:'#0f1623' }}>Transaction</div>
@@ -426,7 +313,7 @@ const Home = () => {
               backdropFilter:'blur(20px)', animation:'float 4s ease-in-out infinite', animationDelay:'1s',
             }}>
               <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,97,245,0.08)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <Star size={16} color="#3b61f5" fill="#3b61f5"/>
+                <Star size={16} color="#3b61f5" fill="#3b61f5" />
               </div>
               <div>
                 <div style={{ fontSize:11, fontWeight:700, fontFamily:'Sora,sans-serif', color:'#0f1623' }}>Rewards</div>
@@ -448,10 +335,10 @@ const Home = () => {
                     display:'flex', alignItems:'center', justifyContent:'center',
                     boxShadow:`0 4px 14px ${color}15`,
                   }}>
-                    <Icon size={20} color={color}/>
+                    <Icon size={20} color={color} />
                   </div>
                   <div style={{ fontSize:'clamp(1.6rem,3vw,2.4rem)', fontWeight:800, fontFamily:'Sora,sans-serif', letterSpacing:'-0.03em', color:'var(--text-primary)' }}>
-                    <AnimatedNumber target={value} suffix={suffix} prefix={prefix}/>
+                    <AnimatedNumber target={value} suffix={suffix} prefix={prefix} />
                   </div>
                   <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:4, fontWeight:500 }}>{label}</div>
                 </div>
@@ -472,7 +359,7 @@ const Home = () => {
               <div key={i} className="premium-card stagger-item" style={{ padding:'32px 24px', textAlign:'center', animationDelay:`${i*130}ms` }}>
                 <div style={{ fontSize:10, fontWeight:800, fontFamily:'Sora,sans-serif', color:`${color}65`, letterSpacing:'0.12em', marginBottom:16, textTransform:'uppercase' }}>STEP {step}</div>
                 <div style={{ width:56, height:56, borderRadius:16, margin:'0 auto 20px', background:`${color}10`, border:`1px solid ${color}20`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 6px 20px ${color}12` }}>
-                  <Icon size={24} color={color}/>
+                  <Icon size={24} color={color} />
                 </div>
                 <h3 style={{ fontSize:15, margin:'0 0 10px', fontWeight:700 }}>{title}</h3>
                 <p style={{ fontSize:14, color:'var(--text-secondary)', lineHeight:1.65, margin:0 }}>{desc}</p>
@@ -493,7 +380,7 @@ const Home = () => {
               {CAPABILITIES.map(({ icon:Icon, color, title, desc }, i) => (
                 <div key={i} className="premium-card stagger-item" style={{ padding:'24px 26px', display:'flex', gap:18, alignItems:'flex-start', animationDelay:`${i*80}ms` }}>
                   <div style={{ width:44, height:44, borderRadius:12, flexShrink:0, marginTop:2, background:`${color}10`, border:`1px solid ${color}20`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 14px ${color}12` }}>
-                    <Icon size={20} color={color}/>
+                    <Icon size={20} color={color} />
                   </div>
                   <div>
                     <h3 style={{ fontSize:15, margin:'0 0 6px', fontWeight:700 }}>{title}</h3>
@@ -520,7 +407,7 @@ const Home = () => {
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 {['SOC 2 Type II Compliant','End-to-end encrypted card data','Two-factor authentication support','Automatic fraud detection'].map((item,i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <CheckCircle size={16} color="#10b981"/>
+                    <CheckCircle size={16} color="#10b981" />
                     <span style={{ fontSize:14, color:'var(--text-secondary)', fontWeight:500 }}>{item}</span>
                   </div>
                 ))}
@@ -530,7 +417,7 @@ const Home = () => {
               {SECURITY.map(({ icon:Icon, color, title, desc }, i) => (
                 <div key={i} className="premium-card stagger-item" style={{ padding:'22px 20px', animationDelay:`${i*100}ms` }}>
                   <div style={{ width:40, height:40, borderRadius:10, marginBottom:14, background:`${color}10`, border:`1px solid ${color}20`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 12px ${color}12` }}>
-                    <Icon size={18} color={color}/>
+                    <Icon size={18} color={color} />
                   </div>
                   <h4 style={{ fontSize:14, fontWeight:700, margin:'0 0 6px' }}>{title}</h4>
                   <p style={{ fontSize:12.5, color:'var(--text-secondary)', lineHeight:1.6, margin:0 }}>{desc}</p>
@@ -551,16 +438,13 @@ const Home = () => {
               {TESTIMONIALS.map(({ name, role, avatar, color, stars, text }, i) => (
                 <div key={i} className="premium-card stagger-item" style={{ padding:'28px 26px', animationDelay:`${i*120}ms` }}>
                   <div style={{ display:'flex', gap:3, marginBottom:16 }}>
-                    {Array.from({ length:stars }).map((_,j) => <Star key={j} size={13} color="#f59e0b" fill="#f59e0b"/>)}
+                    {Array.from({ length:stars }).map((_,j) => <Star key={j} size={13} color="#f59e0b" fill="#f59e0b" />)}
                   </div>
                   <p style={{ fontSize:14.5, color:'var(--text-secondary)', lineHeight:1.72, margin:'0 0 20px', fontStyle:'italic' }}>"{text}"</p>
                   <div style={{ display:'flex', alignItems:'center', gap:12, borderTop:'1px solid var(--border)', paddingTop:16 }}>
-                    <div style={{
-                      width:36, height:36, borderRadius:'50%',
-                      background:`linear-gradient(135deg,${color},${color}99)`,
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      fontSize:13, fontWeight:700, color:'#fff', fontFamily:'Sora,sans-serif', flexShrink:0,
-                    }}>{avatar}</div>
+                    <div style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,${color},${color}99)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'#fff', fontFamily:'Sora,sans-serif', flexShrink:0 }}>
+                      {avatar}
+                    </div>
                     <div>
                       <div style={{ fontSize:13, fontWeight:700, fontFamily:'Sora,sans-serif', color:'var(--text-primary)' }}>{name}</div>
                       <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>{role}</div>
@@ -579,26 +463,24 @@ const Home = () => {
             <div style={{ position:'absolute', top:0, left:'15%', right:'15%', height:1, background:'linear-gradient(90deg,transparent,rgba(59,97,245,0.4),rgba(139,92,246,0.4),transparent)' }} />
             {!isLoggedIn && (
               <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:999, marginBottom:20, background:'rgba(59,97,245,0.07)', border:'1px solid rgba(59,97,245,0.18)', fontSize:11, fontWeight:700, color:'var(--brand-400)', fontFamily:'Sora,sans-serif', letterSpacing:'0.06em', textTransform:'uppercase' }}>
-                <Sparkles size={10}/> FREE TO START
+                <Sparkles size={10} /> FREE TO START
               </div>
             )}
             <h2 style={{ fontSize:'clamp(1.75rem,4vw,2.75rem)', marginBottom:14, position:'relative' }}>
               {isLoggedIn ? 'Ready to manage your cards?' : 'Start for free today'}
             </h2>
             <p style={{ color:'var(--text-secondary)', fontSize:16, maxWidth:440, margin:'0 auto 36px', lineHeight:1.7, position:'relative' }}>
-              {isLoggedIn
-                ? 'Head to your dashboard to issue new cards, track transactions, and redeem rewards.'
-                : 'Join over 12,000 users who trust Credify to manage their virtual cards securely.'}
+              {isLoggedIn ? 'Head to your dashboard to issue new cards, track transactions, and redeem rewards.' : 'Join over 12,000 users who trust Credify to manage their virtual cards securely.'}
             </p>
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', position:'relative' }}>
               {isLoggedIn ? (
                 <button className="btn-primary" style={{ fontSize:15, padding:'14px 32px' }} onClick={() => navigate('/dashboard')}>
-                  Open Dashboard <ArrowRight size={16}/>
+                  Open Dashboard <ArrowRight size={16} />
                 </button>
               ) : (
                 <>
                   <button className="btn-primary" style={{ fontSize:15, padding:'14px 32px' }} onClick={() => navigate('/register')}>
-                    Create Free Account <ArrowRight size={16}/>
+                    Create Free Account <ArrowRight size={16} />
                   </button>
                   <button className="btn-secondary" style={{ fontSize:15, padding:'14px 28px' }} onClick={() => navigate('/pricing')}>
                     View Pricing
