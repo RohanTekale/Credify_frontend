@@ -1,4 +1,5 @@
 // src/App.jsx
+// Updated: uses themeStore so dark/light background is applied correctly
 import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -29,7 +30,8 @@ import QueryRunner  from './pages/dev/QueryRunner';
 import ApiDebugger  from './pages/dev/ApiDebugger';
 import AuditLogs    from './pages/dev/AuditLogs';
 
-import useAuthStore from './store/authStore';
+import useAuthStore  from './store/authStore';
+import useThemeStore from './store/themeStore';
 
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -44,7 +46,6 @@ const ProtectedRoute = ({ children }) => {
   return token ? children : <Navigate to="/login" replace />;
 };
 
-// Dev route: must be logged in AND be admin/staff
 const DevRoute = ({ children }) => {
   const { token, isAdmin } = useAuthStore();
   if (!token)   return <Navigate to="/login"     replace />;
@@ -52,29 +53,41 @@ const DevRoute = ({ children }) => {
   return children;
 };
 
-// ── Inner app wrapper (needs router context for useLocation) ──────────────────
+// ── Inner app wrapper ─────────────────────────────────────────────────────────
 const AppInner = () => {
-  const { isAdmin } = useAuthStore();
+  const { isAdmin }  = useAuthStore();
+  const { theme }    = useThemeStore();
   const { pathname } = useLocation();
 
-  const isDevPath = pathname.startsWith('/dev');
+  const isDevPath  = pathname.startsWith('/dev');
+  const isDark     = theme === 'dark';
 
   return (
     <div
-      className={
+      style={
         isDevPath
-          ? ''
-          : 'relative flex flex-col w-full min-h-screen bg-gradient-to-br from-[#0F0F1C] to-[#1A1B2F] overflow-x-hidden'
+          ? {}
+          : {
+              position:  'relative',
+              display:   'flex',
+              flexDirection: 'column',
+              width:     '100%',
+              minHeight: '100vh',
+              background: isDark
+                ? 'linear-gradient(135deg, #0F0F1C 0%, #1A1B2F 100%)'
+                : 'var(--bg-base)',
+              overflowX: 'hidden',
+              transition: 'background 300ms ease',
+            }
       }
     >
-      {!isDevPath && <BackgroundParticles />}
+      {!isDevPath && isDark && <BackgroundParticles />}
       {!isDevPath && <Navbar />}
       <ScrollToTop />
 
       <main className={isDevPath ? '' : 'relative z-10 flex-1 flex flex-col pt-16'}>
         <Routes>
-
-          {/* ── Public pages ──────────────────────────────────────────────── */}
+          {/* ── Public pages ──────────────────────────────────────────── */}
           <Route path="/"         element={<Home />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing"  element={<Pricing />} />
@@ -82,7 +95,7 @@ const AppInner = () => {
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* ── User / Admin dashboard ────────────────────────────────────── */}
+          {/* ── User / Admin dashboard ────────────────────────────────── */}
           <Route
             path="/dashboard"
             element={
@@ -100,7 +113,7 @@ const AppInner = () => {
             }
           />
 
-          {/* ── Dev Panel (admin only) ────────────────────────────────────── */}
+          {/* ── Dev Panel (admin only) ────────────────────────────────── */}
           <Route
             path="/dev"
             element={
@@ -117,9 +130,8 @@ const AppInner = () => {
             <Route path="logs"          element={<AuditLogs />} />
           </Route>
 
-          {/* ── 404 ──────────────────────────────────────────────────────── */}
+          {/* ── 404 ──────────────────────────────────────────────────── */}
           <Route path="*" element={<Navigate to="/" replace />} />
-
         </Routes>
       </main>
 
@@ -129,17 +141,11 @@ const AppInner = () => {
 };
 
 // ── App root ──────────────────────────────────────────────────────────────────
-// FIX: <ToastProvider /> was a self-closing sibling tag inside AppInner,
-// so it had no children and the Context value was never in scope for any
-// route — causing `useToast must be used inside <ToastProvider>` on Login.
-//
-// Fix: move ToastProvider HERE as a wrapper around AppInner so every page,
-// including Login, receives the context.
 const App = () => (
   <Router
     future={{
-      v7_startTransition:   true,   // silences React Router v7 console warning
-      v7_relativeSplatPath: true,   // silences React Router v7 console warning
+      v7_startTransition:   true,
+      v7_relativeSplatPath: true,
     }}
   >
     <ToastProvider>

@@ -1,690 +1,799 @@
-// src/pages/Home.jsx  — Credify Post-Login Hero (Public: marketing landing)
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// src/pages/Home.jsx
+// Premium redesign:
+// - Personalized animated welcome for logged-in users (name + greeting + wave)
+// - Light theme default, dark mode toggle
+// - No repeated features section (replaced with How It Works, Security Trust, Testimonials, CTA)
+// - Stats bar with animated counters
+// - Hero with illustrated card mockup + floating badges
+// - Premium aesthetic throughout
+
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, Shield, Zap, Globe, TrendingUp, CreditCard,
-  Star, ChevronDown, Play, Lock, Users, Activity,
+  ArrowRight, Shield, Zap, TrendingUp, Users, CreditCard,
+  CheckCircle, Star, Lock, Globe, Clock, Award,
+  Sparkles, ChevronRight, BarChart3, Smartphone, RefreshCw,
+  HeartHandshake
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
-// ─── Animated number counter ──────────────────────────────────────────────────
-const useCounter = (target, dur = 1600, go = false) => {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    if (!go) return;
-    let s = null;
-    const step = (ts) => {
-      if (!s) s = ts;
-      const p = Math.min((ts - s) / dur, 1);
-      setV(Math.floor((1 - Math.pow(1 - p, 4)) * target));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, dur, go]);
-  return v;
-};
-
-// ─── Particle canvas ─────────────────────────────────────────────────────────
-const ParticleField = () => {
+/* ── Animated Counter ─────────────────────────────────────────────────────── */
+const AnimatedNumber = ({ target, suffix = '', prefix = '' }) => {
+  const [display, setDisplay] = useState(0);
   const ref = useRef(null);
+  const started = useRef(false);
+
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let raf;
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    window.addEventListener('resize', resize);
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const numeric = parseFloat(target.replace(/[^0-9.]/g, ''));
+        const duration = 1800;
+        const steps = 60;
+        const increment = numeric / steps;
+        let current = 0;
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= numeric) {
+            setDisplay(numeric);
+            clearInterval(timer);
+          } else {
+            setDisplay(Math.floor(current * 10) / 10);
+          }
+        }, duration / steps);
+      }
+    }, { threshold: 0.4 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target]);
 
-    const pts = Array.from({ length: 55 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.22,
-      vy: (Math.random() - 0.5) * 0.22,
-      r: Math.random() * 1.6 + 0.4,
-      a: Math.random() * 0.45 + 0.1,
-    }));
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pts.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(100,140,255,${p.a})`;
-        ctx.fill();
-      });
-      // draw connecting lines
-      pts.forEach((a, i) => pts.slice(i + 1).forEach(b => {
-        const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < 110) {
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(100,140,255,${0.08 * (1 - d / 110)})`;
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-        }
-      }));
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
-  }, []);
-  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />;
+  const formatted = Number.isInteger(Number(display)) ? display : display.toFixed(1);
+  return <span ref={ref}>{prefix}{formatted}{suffix}</span>;
 };
 
-// ─── 3D Floating Card ─────────────────────────────────────────────────────────
-const HeroCard = ({ user }) => {
-  const cardRef = useRef(null);
-  const [rot, setRot] = useState({ x: 8, y: -6 });
-  const [shine, setShine] = useState({ x: 50, y: 50 });
-  const [hovered, setHovered] = useState(false);
-  const name = user?.username || 'CARDHOLDER';
+/* ── Welcome Banner (logged in) ───────────────────────────────────────────── */
+const WelcomeBanner = ({ user }) => {
+  const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
 
-  const onMove = useCallback((e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const { left, top, width, height } = card.getBoundingClientRect();
-    const cx = (e.clientX - left) / width;
-    const cy = (e.clientY - top) / height;
-    setRot({ x: (cy - 0.5) * -22, y: (cx - 0.5) * 22 });
-    setShine({ x: cx * 100, y: cy * 100 });
-  }, []);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const displayName = user?.first_name || user?.username || 'there';
 
-  const onLeave = useCallback(() => {
-    setRot({ x: 8, y: -6 });
-    setShine({ x: 50, y: 50 });
-    setHovered(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
   return (
     <div
-      ref={cardRef}
-      onMouseMove={onMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={onLeave}
+      className={`animate-welcome-in`}
       style={{
-        width: 340, height: 204,
+        margin: '0 auto 40px',
+        maxWidth: 860,
+        padding: '28px 36px',
         borderRadius: 20,
-        transform: `perspective(1000px) rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(${hovered ? 1.06 : 1})`,
-        transition: hovered ? 'transform 0.05s linear' : 'transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-        transformStyle: 'preserve-3d',
-        cursor: 'pointer',
+        background: 'linear-gradient(135deg, rgba(59,97,245,0.08) 0%, rgba(139,92,246,0.06) 50%, rgba(6,182,212,0.05) 100%)',
+        border: '1px solid rgba(59,97,245,0.15)',
+        boxShadow: '0 8px 32px rgba(59,97,245,0.08), inset 0 1px 0 rgba(255,255,255,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 20,
+        flexWrap: 'wrap',
         position: 'relative',
-        willChange: 'transform',
+        overflow: 'hidden',
       }}
     >
-      {/* Card body */}
+      {/* Shimmer accent */}
       <div style={{
-        position: 'absolute', inset: 0, borderRadius: 20,
-        background: 'linear-gradient(145deg,#1a2a6c 0%,#0d1660 30%,#1a0a3e 65%,#0a1a3a 100%)',
-        border: '1px solid rgba(255,255,255,0.14)',
-        boxShadow: `0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.1)`,
-        overflow: 'hidden',
-      }}>
-        {/* Holographic shimmer */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse at ${shine.x}% ${shine.y}%, rgba(120,140,255,0.22) 0%, transparent 55%)`,
-          transition: hovered ? 'none' : 'background 0.6s ease',
-          pointerEvents: 'none',
-        }} />
-        {/* Grid texture */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.015) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.015) 29px)',
-          pointerEvents: 'none',
-        }} />
-        {/* Top gloss */}
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '45%',
-          background: 'linear-gradient(180deg,rgba(255,255,255,0.07) 0%,transparent 100%)',
-          pointerEvents: 'none', borderRadius: '20px 20px 0 0',
-        }} />
-        {/* Glow orb top-right */}
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(80,120,255,0.22)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+        background: 'linear-gradient(90deg, transparent, rgba(59,97,245,0.5), rgba(139,92,246,0.5), transparent)',
+        borderRadius: '20px 20px 0 0',
+      }} />
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 1, padding: '20px 24px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.14em', fontFamily: 'Sora,sans-serif' }}>CREDIFY VIRTUAL</div>
-            {/* Chip */}
-            <div style={{ width: 34, height: 26, borderRadius: 5, background: 'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, padding: 4 }}>
-              {[0, 1, 2, 3].map(i => <div key={i} style={{ background: 'rgba(0,0,0,0.28)', borderRadius: 1 }} />)}
-            </div>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
+        {/* Avatar */}
+        <div style={{
+          width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
+          background: 'linear-gradient(135deg, #3b61f5, #8b5cf6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 20, fontWeight: 800, color: '#fff',
+          fontFamily: 'Sora, sans-serif',
+          boxShadow: '0 4px 16px rgba(59,97,245,0.35)',
+        }}>
+          {displayName.slice(0, 1).toUpperCase()}
+        </div>
 
-          {/* Card number */}
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 15, color: 'rgba(255,255,255,0.88)', letterSpacing: '0.24em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
-            4829 •••• •••• 7234
+        <div>
+          <div style={{
+            fontSize: 13, color: 'var(--brand-400)', fontWeight: 600,
+            fontFamily: 'Sora, sans-serif', letterSpacing: '0.04em',
+            marginBottom: 3,
+          }}>
+            <span className="animate-wave" style={{ marginRight: 6 }}>👋</span>
+            {greeting}
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div>
-              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>Card Holder</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', fontFamily: 'Sora,sans-serif', letterSpacing: '0.05em' }}>{name.toUpperCase().slice(0, 16)}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>Expires</div>
-              <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono,monospace', color: 'rgba(255,255,255,0.8)' }}>12/28</div>
-            </div>
-            {/* Mastercard-style circles */}
-            <div style={{ display: 'flex', marginLeft: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,80,50,0.7)', border: '1px solid rgba(255,255,255,0.15)' }} />
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,180,50,0.6)', border: '1px solid rgba(255,255,255,0.15)', marginLeft: -12 }} />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: 'clamp(1.3rem, 3vw, 1.75rem)',
+              fontFamily: 'Sora, sans-serif', fontWeight: 800,
+              color: 'var(--text-primary)', letterSpacing: '-0.02em',
+            }}>
+              Welcome back,{' '}
+            </span>
+            <span
+              className="animate-welcome-name delay-200"
+              style={{
+                fontSize: 'clamp(1.3rem, 3vw, 1.75rem)',
+                fontFamily: 'Sora, sans-serif', fontWeight: 800,
+                letterSpacing: '-0.02em',
+                background: 'linear-gradient(135deg, #3b61f5, #8b5cf6)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}
+            >
+              {displayName}!
+            </span>
           </div>
+          <p style={{
+            margin: '4px 0 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5,
+          }}>
+            Your dashboard is ready. You have full control of your virtual cards.
+          </p>
         </div>
       </div>
 
-      {/* Shadow card behind */}
+      {/* Quick action */}
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="btn-primary"
+        style={{ flexShrink: 0, gap: 8, fontSize: 14, padding: '12px 22px' }}
+      >
+        <BarChart3 size={15} />
+        Open Dashboard
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+};
+
+/* ── How It Works ─────────────────────────────────────────────────────────── */
+const STEPS = [
+  {
+    step: '01',
+    icon: Users,
+    color: '#3b61f5',
+    title: 'Create Your Account',
+    desc: 'Sign up in seconds. Complete a quick KYC verification to unlock full card management capabilities.',
+  },
+  {
+    step: '02',
+    icon: CreditCard,
+    color: '#8b5cf6',
+    title: 'Issue Virtual Cards',
+    desc: 'Generate virtual credit cards instantly. Set custom limits, names, and expiry dates for each card.',
+  },
+  {
+    step: '03',
+    icon: Zap,
+    color: '#06b6d4',
+    title: 'Transact & Track',
+    desc: 'Use your cards anywhere. Every transaction is tracked in real-time with detailed analytics.',
+  },
+  {
+    step: '04',
+    icon: TrendingUp,
+    color: '#10b981',
+    title: 'Earn & Redeem Rewards',
+    desc: 'Accumulate points on every purchase. Redeem them for benefits, cashback, and exclusive perks.',
+  },
+];
+
+/* ── Security Pillars ─────────────────────────────────────────────────────── */
+const SECURITY = [
+  { icon: Shield,    color: '#3b61f5', title: 'Bank-Grade Encryption', desc: '256-bit AES encryption for all data at rest and in transit.' },
+  { icon: Lock,      color: '#8b5cf6', title: 'JWT Authentication',     desc: 'Stateless, secure token-based auth with refresh rotation.' },
+  { icon: Globe,     color: '#06b6d4', title: 'Global Compliance',       desc: 'KYC-compliant identity verification built into every account.' },
+  { icon: Clock,     color: '#f59e0b', title: '99.9% Uptime SLA',        desc: 'High-availability infrastructure with redundant failover.' },
+];
+
+/* ── Testimonials ─────────────────────────────────────────────────────────── */
+const TESTIMONIALS = [
+  {
+    name: 'Sarah M.',
+    role: 'Freelance Designer',
+    avatar: 'S',
+    color: '#ec4899',
+    stars: 5,
+    text: 'Credify changed how I manage client subscriptions. Virtual cards per project means zero budget bleed.',
+  },
+  {
+    name: 'Rohan K.',
+    role: 'Startup Founder',
+    avatar: 'R',
+    color: '#3b61f5',
+    stars: 5,
+    text: 'The rewards system genuinely adds up. I redeemed for benefits worth ₹4,000 last month alone.',
+  },
+  {
+    name: 'Priya T.',
+    role: 'Finance Manager',
+    avatar: 'P',
+    color: '#8b5cf6',
+    stars: 5,
+    text: 'The admin dashboard is exceptional. Real-time transaction visibility with zero complexity.',
+  },
+];
+
+/* ── Stats ────────────────────────────────────────────────────────────────── */
+const STATS = [
+  { label: 'Active Users',            value: '12K', suffix: '+',  icon: Users,      color: '#3b61f5' },
+  { label: 'Transactions Processed',  value: '2.4', suffix: 'M+', prefix: '$', icon: TrendingUp,  color: '#8b5cf6' },
+  { label: 'Cards Issued',            value: '38K', suffix: '+',  icon: CreditCard, color: '#06b6d4' },
+  { label: 'Uptime Guaranteed',       value: '99.9',suffix: '%',  icon: Zap,        color: '#10b981' },
+];
+
+/* ── App Capabilities (replaces duplicate Features section) ──────────────── */
+const CAPABILITIES = [
+  {
+    icon: Smartphone,
+    color: '#3b61f5',
+    title: 'Mobile-First Design',
+    desc: 'Fully responsive interface optimised for desktop, tablet, and mobile — manage cards from anywhere.',
+  },
+  {
+    icon: RefreshCw,
+    color: '#8b5cf6',
+    title: 'Real-Time Sync',
+    desc: 'Transaction data and card status sync instantly across all sessions — no refresh needed.',
+  },
+  {
+    icon: BarChart3,
+    color: '#06b6d4',
+    title: 'Spending Analytics',
+    desc: 'Visual spending breakdowns by category, time period, and card — actionable insights at a glance.',
+  },
+  {
+    icon: Award,
+    color: '#f59e0b',
+    title: 'Tiered Rewards',
+    desc: 'Earn 1–3× points based on spend categories. Unlock Silver, Gold, Platinum status automatically.',
+  },
+  {
+    icon: HeartHandshake,
+    color: '#10b981',
+    title: 'Dedicated Support',
+    desc: 'In-app chatbot available 24/7. Priority email support for Pro members with <2h response time.',
+  },
+  {
+    icon: Globe,
+    color: '#ec4899',
+    title: 'Multi-Currency Ready',
+    desc: 'Cards work globally. Automatic FX rate display at the moment of each transaction.',
+  },
+];
+
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+const Home = () => {
+  const navigate = useNavigate();
+  const { user, token } = useAuthStore();
+  const isLoggedIn = !!token;
+
+  return (
+    <div style={{ minHeight: 'calc(100vh - 64px)', paddingTop: 64 }}>
+
+      {/* ── Ambient background ─────────────────────────────────────────── */}
       <div style={{
-        position: 'absolute', top: 14, left: -12, right: 12, bottom: -14,
-        borderRadius: 20, zIndex: -1,
-        background: 'linear-gradient(145deg,#0d0730,#060d30)',
-        opacity: 0.7,
-        transform: 'translateZ(-30px)',
+        position: 'fixed', top: '-15%', left: '-10%', width: 600, height: 600,
+        background: `radial-gradient(circle, var(--glow-1) 0%, transparent 70%)`,
+        borderRadius: '50%', pointerEvents: 'none', zIndex: 0,
       }} />
-    </div>
-  );
-};
+      <div style={{
+        position: 'fixed', bottom: '5%', right: '-8%', width: 500, height: 500,
+        background: `radial-gradient(circle, var(--glow-2) 0%, transparent 70%)`,
+        borderRadius: '50%', pointerEvents: 'none', zIndex: 0,
+      }} />
 
-// ─── Floating stat badge ──────────────────────────────────────────────────────
-const FloatBadge = ({ style, icon: Icon, iconColor, label, value }) => (
-  <div style={{
-    position: 'absolute', ...style,
-    background: 'rgba(8,12,24,0.9)', backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 14, padding: '10px 16px',
-    display: 'flex', alignItems: 'center', gap: 10,
-    boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
-    animation: `fbFloat ${2.8 + Math.random()}s ease-in-out infinite`,
-    whiteSpace: 'nowrap',
-  }}>
-    <div style={{ width: 32, height: 32, borderRadius: 9, background: `${iconColor}18`, border: `1px solid ${iconColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <Icon size={14} color={iconColor} />
-    </div>
-    <div>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 1 }}>{label}</div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'Sora,sans-serif' }}>{value}</div>
-    </div>
-  </div>
-);
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
-// ─── Feature card ─────────────────────────────────────────────────────────────
-const FeatCard = ({ icon: Icon, title, desc, color, delay }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        padding: '28px 26px', borderRadius: 20,
-        background: hovered ? `linear-gradient(135deg,${color}0c,rgba(255,255,255,0.03))` : 'linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))',
-        border: `1px solid ${hovered ? color + '30' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hovered ? `0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px ${color}20` : '0 4px 24px rgba(0,0,0,0.35)',
-        transform: hovered ? 'translateY(-8px)' : 'translateY(0)',
-        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-        cursor: 'default',
-        animationDelay: `${delay}ms`,
-      }}
-      className="animate-fade-up"
-    >
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: `${color}14`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-        <Icon size={20} color={color} />
-      </div>
-      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: '#f0f4ff' }}>{title}</h3>
-      <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.5)', lineHeight: 1.7, margin: 0 }}>{desc}</p>
-    </div>
-  );
-};
+        {/* ══ HERO ════════════════════════════════════════════════════════ */}
+        <section style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 80px' }}>
 
-// ─── Timeline step ────────────────────────────────────────────────────────────
-const TimeStep = ({ n, title, desc, color, last }) => (
-  <div style={{ display: 'flex', gap: 20, position: 'relative' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-      <div style={{ width: 44, height: 44, borderRadius: '50%', background: `${color}18`, border: `2px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, fontFamily: 'Sora,sans-serif', color, flexShrink: 0, boxShadow: `0 0 20px ${color}30` }}>{n}</div>
-      {!last && <div style={{ width: 1, flex: 1, background: `linear-gradient(180deg,${color}40,transparent)`, marginTop: 8, minHeight: 40 }} />}
-    </div>
-    <div style={{ paddingBottom: last ? 0 : 32, paddingTop: 8 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f4ff', marginBottom: 5 }}>{title}</div>
-      <div style={{ fontSize: 13, color: 'rgba(240,244,255,0.48)', lineHeight: 1.65 }}>{desc}</div>
-    </div>
-  </div>
-);
+          {/* Logged-in Welcome */}
+          {isLoggedIn && user && <WelcomeBanner user={user} />}
 
-// ─── Logged-in Hero ───────────────────────────────────────────────────────────
-const LoggedInHome = ({ user, navigate }) => {
-  const [phase, setPhase] = useState(0); // 0=name-in, 1=rest
-  const [countGo, setCountGo] = useState(false);
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const greetEmoji = hour < 12 ? '☀️' : hour < 17 ? '🌤️' : '🌙';
+          {/* Hero Content */}
+          <div style={{ textAlign: 'center' }}>
 
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 600);
-    const t2 = setTimeout(() => setCountGo(true), 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  const c1 = useCounter(2400000, 2000, countGo);
-  const c2 = useCounter(99, 1600, countGo);
-  const c3 = useCounter(38000, 2000, countGo);
-
-  const FEATURES = [
-    { icon: Shield,     title: 'Bank-grade Security',    desc: 'End-to-end encryption, biometric auth, and real-time fraud monitoring protecting every transaction.',              color: '#10b981', delay: 0 },
-    { icon: Zap,        title: 'Instant Virtual Cards',  desc: 'Issue 16-digit virtual cards in seconds. Set limits, freeze, or block — all from your dashboard.',               color: '#3b61f5', delay: 80 },
-    { icon: TrendingUp, title: 'AI Spend Intelligence',  desc: 'Smart categorisation of every spend with predictive insights that help you stay ahead of your financial goals.', color: '#8b5cf6', delay: 160 },
-    { icon: Globe,      title: 'Multi-currency Support', desc: 'Transact globally. Automatic best-rate forex selection across all your linked cards, no hidden fees.',           color: '#06b6d4', delay: 240 },
-    { icon: Activity,   title: 'Real-time Analytics',    desc: 'Live dashboards, sparklines, and deep transaction breakdowns — your money at a glance, always.',                 color: '#f59e0b', delay: 320 },
-    { icon: Star,       title: 'Rewards That Scale',     desc: 'Earn points on every purchase automatically maximised across cards. Redeem for cashback, vouchers, and more.',   color: '#ec4899', delay: 400 },
-  ];
-
-  const STEPS = [
-    { title: 'Create your account',       desc: 'Sign up in under 60 seconds with your email. No paperwork.',          color: '#3b61f5' },
-    { title: 'Complete KYC verification', desc: 'Upload a government ID. Our AI reviews it within 24 hours.',          color: '#8b5cf6' },
-    { title: 'Request a virtual card',    desc: 'Choose Basic, Silver, Gold, or Platinum — your limit, your control.', color: '#10b981' },
-    { title: 'Spend & earn rewards',      desc: 'Every transaction builds your reward balance. Track it live.',         color: '#f59e0b' },
-  ];
-
-  const avatarPalette = ['#3b61f5', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
-  const avatarColor = user?.username ? avatarPalette[user.username.charCodeAt(0) % avatarPalette.length] : '#3b61f5';
-
-  return (
-    <div style={{ overflowX: 'hidden' }}>
-
-      {/* ══ HERO SECTION ══════════════════════════════════════════════════════ */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden', paddingTop: 80 }}>
-        <ParticleField />
-
-        {/* Ambient orbs */}
-        <div style={{ position: 'absolute', top: '-15%', left: '-8%', width: 650, height: 650, borderRadius: '50%', background: `radial-gradient(circle,${avatarColor}12 0%,transparent 70%)`, pointerEvents: 'none', animation: 'orbDrift1 14s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(139,92,246,0.1) 0%,transparent 70%)', pointerEvents: 'none', animation: 'orbDrift2 18s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', top: '40%', left: '38%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle,rgba(16,185,129,0.06) 0%,transparent 70%)', pointerEvents: 'none' }} />
-
-        {/* Diagonal grid overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'linear-gradient(rgba(59,97,245,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,97,245,0.04) 1px,transparent 1px)',
-          backgroundSize: '72px 72px',
-          maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%)',
-        }} />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ width: '100%', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center', minHeight: '85vh' }}>
-
-            {/* LEFT — Text */}
-            <div>
-              {/* Welcome pill */}
-              <div style={{
+            {/* Trust badge */}
+            <div className="animate-fade-up" style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: `${avatarColor}12`, border: `1px solid ${avatarColor}28`,
-                borderRadius: 100, padding: '6px 16px 6px 8px',
-                marginBottom: 28,
-                opacity: phase >= 0 ? 1 : 0,
-                transform: phase >= 0 ? 'translateY(0)' : 'translateY(16px)',
-                transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
+                padding: '7px 18px', borderRadius: 999,
+                background: 'rgba(59,97,245,0.08)',
+                border: '1px solid rgba(59,97,245,0.2)',
+                fontSize: 12, fontWeight: 700, fontFamily: 'Sora, sans-serif',
+                color: 'var(--brand-400)', letterSpacing: '0.04em',
               }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg,${avatarColor},${avatarColor}aa)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', fontFamily: 'Sora,sans-serif' }}>
-                  {(user?.username || 'U').slice(0, 2).toUpperCase()}
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: avatarColor, fontFamily: 'Sora,sans-serif' }}>
-                  {greeting}, {user?.username || 'User'}! {greetEmoji}
-                </span>
-              </div>
-
-              {/* Headline — name animates in first */}
-              <h1 style={{
-                fontSize: 'clamp(2.8rem,5.5vw,4.4rem)',
-                lineHeight: 1.05, letterSpacing: '-0.04em',
-                margin: '0 0 24px',
-                opacity: phase >= 0 ? 1 : 0,
-                transform: phase >= 0 ? 'translateY(0)' : 'translateY(24px)',
-                transition: 'all 0.7s 0.1s cubic-bezier(0.16,1,0.3,1)',
-              }}>
-                Your money,{' '}
-                <span style={{
-                  display: 'block',
-                  background: 'linear-gradient(90deg,#6089ff 0%,#a78bfa 40%,#38bdf8 80%,#6089ff 100%)',
-                  backgroundSize: '200% auto',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  animation: 'gradShift 4s linear infinite',
-                  opacity: phase >= 1 ? 1 : 0,
-                  transform: phase >= 1 ? 'translateY(0)' : 'translateY(20px)',
-                  transition: 'opacity 0.6s 0.45s ease, transform 0.6s 0.45s cubic-bezier(0.16,1,0.3,1)',
-                }}>
-                  fully in control.
-                </span>
-              </h1>
-
-              <p style={{
-                fontSize: 17, lineHeight: 1.75, color: 'rgba(240,244,255,0.55)',
-                maxWidth: 480, margin: '0 0 36px',
-                opacity: phase >= 1 ? 1 : 0,
-                transform: phase >= 1 ? 'translateY(0)' : 'translateY(16px)',
-                transition: 'all 0.6s 0.6s cubic-bezier(0.16,1,0.3,1)',
-              }}>
-                One intelligent hub for all your virtual cards, rewards and spending — 
-                built for the global professional who demands more.
-              </p>
-
-              {/* CTA buttons */}
-              <div style={{
-                display: 'flex', gap: 12, flexWrap: 'wrap',
-                opacity: phase >= 1 ? 1 : 0,
-                transform: phase >= 1 ? 'translateY(0)' : 'translateY(16px)',
-                transition: 'all 0.6s 0.75s cubic-bezier(0.16,1,0.3,1)',
-              }}>
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="btn-primary"
-                  style={{ fontSize: 14, padding: '13px 28px', borderRadius: 13, position: 'relative', overflow: 'hidden' }}
-                  onMouseEnter={e => e.currentTarget.querySelector('.sheen').style.transform = 'translateX(100%)'}
-                  onMouseLeave={e => e.currentTarget.querySelector('.sheen').style.transform = 'translateX(-100%)'}
-                >
-                  <div className="sheen" style={{ position: 'absolute', top: 0, left: 0, width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', transform: 'translateX(-100%)', transition: 'transform 0.5s ease', pointerEvents: 'none' }} />
-                  Open Dashboard <ArrowRight size={15} />
-                </button>
-                <button
-                  onClick={() => document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="btn-secondary"
-                  style={{ fontSize: 14, padding: '13px 24px', borderRadius: 13 }}
-                >
-                  <Play size={14} /> Explore features
-                </button>
-              </div>
-
-              {/* Trust strip */}
-              <div style={{
-                display: 'flex', gap: 20, marginTop: 40, alignItems: 'center',
-                opacity: phase >= 1 ? 1 : 0,
-                transition: 'opacity 0.6s 1s ease',
-              }}>
-                {[
-                  { label: 'ISO 27001', sub: 'Certified' },
-                  { label: 'PCI DSS', sub: 'Compliant' },
-                  { label: '256-bit', sub: 'Encrypted' },
-                ].map(({ label, sub }, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Lock size={11} color="#10b981" />
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#f0f4ff' }}>{label}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(240,244,255,0.35)' }}>{sub}</div>
-                    </div>
-                    {i < 2 && <div style={{ width: 1, height: 28, background: 'rgba(255,255,255,0.1)', marginLeft: 14 }} />}
-                  </div>
-                ))}
-              </div>
+                <Sparkles size={11} />
+                TRUSTED BY 12,000+ USERS WORLDWIDE
+              </span>
             </div>
 
-            {/* RIGHT — 3D card scene */}
-            <div style={{
-              display: 'flex', justifyContent: 'center', alignItems: 'center',
-              position: 'relative', height: 440,
-              opacity: phase >= 1 ? 1 : 0,
-              transform: phase >= 1 ? 'translateX(0)' : 'translateX(40px)',
-              transition: 'all 0.9s 0.5s cubic-bezier(0.16,1,0.3,1)',
-            }}>
-              {/* Rotating ring */}
-              <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', border: '1px solid rgba(59,97,245,0.1)', animation: 'spinRing 25s linear infinite', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', width: 8, height: 8, borderRadius: '50%', background: '#3b61f5', boxShadow: '0 0 12px rgba(59,97,245,0.8)' }} />
-              </div>
-              <div style={{ position: 'absolute', width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(139,92,246,0.08)', animation: 'spinRing 18s linear infinite reverse', pointerEvents: 'none' }} />
+            <h1
+              className="animate-fade-up delay-100"
+              style={{
+                fontSize: 'clamp(2.4rem, 6vw, 4.5rem)',
+                maxWidth: 820, margin: '0 auto 20px',
+                fontFamily: 'Sora, sans-serif', fontWeight: 800,
+                letterSpacing: '-0.03em', lineHeight: 1.1,
+              }}
+            >
+              {isLoggedIn
+                ? <>Your <span className="gradient-text">Smart Card</span> Hub</>
+                : <>The Modern <span className="gradient-text">Virtual Card</span> Platform</>
+              }
+            </h1>
 
-              <HeroCard user={user} />
+            <p
+              className="animate-fade-up delay-200"
+              style={{
+                fontSize: 18, color: 'var(--text-secondary)',
+                maxWidth: 540, margin: '0 auto 40px', lineHeight: 1.7,
+              }}
+            >
+              {isLoggedIn
+                ? 'Issue cards, track spending, earn rewards — everything in one intelligent dashboard.'
+                : 'Issue, manage, and control virtual credit cards with enterprise-grade security and real-time insights — all in one place.'
+              }
+            </p>
+
+            <div
+              className="animate-fade-up delay-300"
+              style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 64 }}
+            >
+              {isLoggedIn ? (
+                <>
+                  <button className="btn-primary" style={{ fontSize: 15, padding: '14px 28px' }} onClick={() => navigate('/dashboard')}>
+                    Go to Dashboard <ArrowRight size={16} />
+                  </button>
+                  <button className="btn-secondary" style={{ fontSize: 15, padding: '14px 28px' }} onClick={() => navigate('/pricing')}>
+                    View Plans
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-primary" style={{ fontSize: 15, padding: '14px 28px' }} onClick={() => navigate('/register')}>
+                    Get Started Free <ArrowRight size={16} />
+                  </button>
+                  <button className="btn-secondary" style={{ fontSize: 15, padding: '14px 28px' }} onClick={() => navigate('/login')}>
+                    Sign In
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Hero Card Visual */}
+            <div className="animate-fade-up delay-400" style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+
+              {/* Background card (tilted) */}
+              <div style={{
+                position: 'absolute',
+                width: 300, height: 178, borderRadius: 18,
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(6,182,212,0.2) 100%)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                transform: 'rotate(-6deg) translateY(8px) translateX(-20px)',
+                boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+              }} />
+
+              {/* Main card */}
+              <div
+                className="animate-float"
+                style={{
+                  width: 340, height: 200, borderRadius: 20,
+                  background: 'linear-gradient(135deg, #1a1f3c 0%, #0f1420 100%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(59,97,245,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  padding: 28, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  position: 'relative', overflow: 'hidden', zIndex: 2,
+                }}
+              >
+                {/* Shine */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%)',
+                  borderRadius: 20,
+                }} />
+                {/* Chip */}
+                <div style={{
+                  position: 'absolute', top: 22, left: 24,
+                  width: 32, height: 24, borderRadius: 5,
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)',
+                }} />
+                {/* Network circles */}
+                <div style={{ position: 'absolute', top: 20, right: 24, display: 'flex' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(59,97,245,0.4)', border: '1px solid rgba(59,97,245,0.6)' }} />
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,200,50,0.3)', border: '1px solid rgba(255,200,50,0.5)', marginLeft: -14 }} />
+                </div>
+
+                <div style={{ marginTop: 28 }}>
+                  <div style={{ fontFamily: 'Sora,sans-serif', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>CREDIFY VIRTUAL</div>
+                  <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 16, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.18em', marginBottom: 16 }}>
+                    4829 •••• •••• 7234
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Card Holder</div>
+                      <div style={{ fontFamily: 'Sora,sans-serif', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+                        {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.username || 'Your Name'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Expires</div>
+                      <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>12/28</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Floating badges */}
-              <FloatBadge icon={TrendingUp} iconColor="#10b981" label="Salary credited" value="+₹62,000" style={{ top: 30, right: -20 }} />
-              <FloatBadge icon={Star} iconColor="#f59e0b" label="Reward points" value="4,820 pts" style={{ bottom: 60, right: -20 }} />
-              <FloatBadge icon={Shield} iconColor="#3b61f5" label="Security status" value="Verified ✓" style={{ bottom: 20, left: -10 }} />
+              <div
+                className="animate-float-alt"
+                style={{
+                  position: 'absolute', bottom: 12, right: 'calc(50% - 230px)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '10px 16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  display: 'flex', alignItems: 'center', gap: 8, zIndex: 3,
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16,185,129,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle size={16} color="#10b981" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Sora,sans-serif', color: 'var(--text-primary)' }}>Transaction</div>
+                  <div style={{ fontSize: 10, color: '#10b981', fontWeight: 600 }}>+$240.00 approved</div>
+                </div>
+              </div>
+
+              <div
+                className="animate-float"
+                style={{
+                  position: 'absolute', top: 0, left: 'calc(50% - 230px)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '10px 16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  display: 'flex', alignItems: 'center', gap: 8, zIndex: 3,
+                  backdropFilter: 'blur(12px)',
+                  animationDelay: '1s',
+                }}
+              >
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59,97,245,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Star size={16} color="#3b61f5" fill="#3b61f5" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Sora,sans-serif', color: 'var(--text-primary)' }}>Rewards</div>
+                  <div style={{ fontSize: 10, color: 'var(--brand-400)', fontWeight: 600 }}>+120 points earned</div>
+                </div>
+              </div>
+
             </div>
           </div>
+        </section>
 
-          {/* Scroll indicator */}
-          <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: 0.4, animation: 'bounce 2.4s ease-in-out infinite' }}>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.12em', fontFamily: 'Sora,sans-serif' }}>SCROLL</span>
-            <ChevronDown size={14} color="rgba(255,255,255,0.5)" />
+        {/* ══ STATS BAR ══════════════════════════════════════════════════ */}
+        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px' }}>
+          <div className="glass-card" style={{ padding: '28px 36px' }}>
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 24,
+            }}>
+              {STATS.map(({ label, value, suffix, prefix, icon: Icon, color }, i) => (
+                <div
+                  key={i}
+                  className={`animate-fade-up delay-${(i + 1) * 100}`}
+                  style={{ textAlign: 'center' }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, margin: '0 auto 10px',
+                    background: `${color}15`, border: `1px solid ${color}25`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon size={18} color={color} />
+                  </div>
+                  <div style={{
+                    fontSize: 'clamp(1.5rem,3vw,2.25rem)', fontWeight: 800,
+                    fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em',
+                    color: 'var(--text-primary)',
+                  }}>
+                    <AnimatedNumber target={value} suffix={suffix} prefix={prefix} />
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3, fontWeight: 500 }}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ══ LIVE STATS TICKER ════════════════════════════════════════════════ */}
-      <div style={{ background: 'rgba(255,255,255,0.025)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '18px 0', overflow: 'hidden' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-            {[
-              { label: 'Transactions Processed', value: `$${(c1 / 1000000).toFixed(1)}M+`, color: '#3b61f5' },
-              { label: 'Platform Uptime',        value: `${c2}.9%`,                       color: '#10b981' },
-              { label: 'Cards Issued',           value: `${(c3 / 1000).toFixed(0)}K+`,    color: '#8b5cf6' },
-              { label: 'Active Users',           value: '12,000+',                        color: '#f59e0b' },
-            ].map(({ label, value, color }, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 'clamp(1.4rem,2.5vw,2rem)', fontWeight: 800, fontFamily: 'Sora,sans-serif', color, letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 4, letterSpacing: '0.04em' }}>{label}</div>
+        {/* ══ HOW IT WORKS ═══════════════════════════════════════════════ */}
+        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 100px' }}>
+          <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-400)', letterSpacing: '0.12em', fontFamily: 'Sora,sans-serif', marginBottom: 10, textTransform: 'uppercase' }}>
+              HOW IT WORKS
+            </p>
+            <h2 style={{ fontSize: 'clamp(1.75rem,4vw,2.75rem)', margin: '0 auto 14px', maxWidth: 520 }}>
+              Up and running in minutes
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: 440, margin: '0 auto', fontSize: 15 }}>
+              Four simple steps from sign-up to your first transaction.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 24,
+            position: 'relative',
+          }}>
+            {STEPS.map(({ step, icon: Icon, color, title, desc }, i) => (
+              <div
+                key={i}
+                className={`glass-card animate-fade-up delay-${(i + 1) * 100}`}
+                style={{ padding: '32px 24px', textAlign: 'center', position: 'relative', overflow: 'visible' }}
+              >
+                {/* Step connector */}
+                {i < STEPS.length - 1 && (
+                  <div style={{
+                    position: 'absolute', top: 44, right: -12,
+                    width: 24, height: 2,
+                    background: `linear-gradient(90deg, ${color}40, transparent)`,
+                    zIndex: 10,
+                    display: window.innerWidth < 768 ? 'none' : 'block',
+                  }} />
+                )}
+
+                <div style={{
+                  fontSize: 11, fontWeight: 800, fontFamily: 'Sora,sans-serif',
+                  color: `${color}80`, letterSpacing: '0.1em', marginBottom: 16,
+                }}>
+                  STEP {step}
+                </div>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16, margin: '0 auto 20px',
+                  background: `${color}12`, border: `1px solid ${color}25`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={24} color={color} />
+                </div>
+                <h3 style={{ fontSize: 16, marginBottom: 10, fontWeight: 700 }}>{title}</h3>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0 }}>{desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* ══ FEATURES SECTION ═════════════════════════════════════════════════ */}
-      <section id="features-section" style={{ padding: '100px 0' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b61f5', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'Sora,sans-serif' }}>Platform capabilities</span>
-            <h2 style={{ fontSize: 'clamp(2rem,4vw,3rem)', margin: '12px 0 16px', lineHeight: 1.1 }}>
-              Everything the modern{' '}<span className="gradient-text">fintech user</span>{' '}needs
-            </h2>
-            <p style={{ fontSize: 16, color: 'rgba(240,244,255,0.5)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
-              Credify combines enterprise-grade infrastructure with a consumer-first experience.
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
-            {FEATURES.map((f, i) => <FeatCard key={i} {...f} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* ══ HOW IT WORKS ════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 0', background: 'rgba(255,255,255,0.015)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center' }}>
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'Sora,sans-serif' }}>How it works</span>
-              <h2 style={{ fontSize: 'clamp(1.8rem,3.5vw,2.8rem)', margin: '12px 0 40px', lineHeight: 1.1 }}>From signup to first<br /><span className="gradient-text">transaction in minutes</span></h2>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {STEPS.map((s, i) => <TimeStep key={i} n={i + 1} {...s} last={i === STEPS.length - 1} />)}
-              </div>
+        {/* ══ CAPABILITIES (new - not repeating Features page) ══════════ */}
+        <section style={{
+          padding: '80px 24px',
+          background: 'var(--bg-subtle)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: 56 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-400)', letterSpacing: '0.12em', fontFamily: 'Sora,sans-serif', marginBottom: 10, textTransform: 'uppercase' }}>
+                PLATFORM CAPABILITIES
+              </p>
+              <h2 style={{ fontSize: 'clamp(1.75rem,4vw,2.75rem)', margin: '0 auto 14px', maxWidth: 560 }}>
+                Built for the way you actually work
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto', fontSize: 15 }}>
+                Beyond basic card management — Credify is a complete financial operations platform.
+              </p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {[
-                { label: 'Average time to first card', value: '< 2 minutes', color: '#3b61f5', icon: Zap },
-                { label: 'KYC approval rate',          value: '97.4%',       color: '#10b981', icon: Shield },
-                { label: 'Transaction success rate',   value: '99.97%',      color: '#8b5cf6', icon: Activity },
-                { label: 'Customer satisfaction',      value: '4.9 / 5.0',   color: '#f59e0b', icon: Star },
-              ].map(({ label, value, color, icon: Icon }, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 22px', borderRadius: 16, background: 'linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: `${color}14`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon size={17} color={color} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+              {CAPABILITIES.map(({ icon: Icon, color, title, desc }, i) => (
+                <div
+                  key={i}
+                  className={`glass-card animate-fade-up delay-${(i % 6 + 1) * 100}`}
+                  style={{ padding: '24px 26px', display: 'flex', gap: 18, alignItems: 'flex-start' }}
+                >
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, flexShrink: 0, marginTop: 2,
+                    background: `${color}12`, border: `1px solid ${color}25`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon size={20} color={color} />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, color: 'rgba(240,244,255,0.45)', marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'Sora,sans-serif', color: '#f0f4ff', letterSpacing: '-0.02em' }}>{value}</div>
+                  <div>
+                    <h3 style={{ fontSize: 15, marginBottom: 6, fontWeight: 700, margin: '0 0 6px' }}>{title}</h3>
+                    <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0 }}>{desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ══ CTA BANNER ══════════════════════════════════════════════════════ */}
-      <section style={{ padding: '80px 0' }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div style={{
-            borderRadius: 28, padding: '64px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden',
-            background: 'linear-gradient(135deg,rgba(59,97,245,0.12) 0%,rgba(139,92,246,0.08) 50%,rgba(6,182,212,0.08) 100%)',
-            border: '1px solid rgba(59,97,245,0.2)',
-            boxShadow: '0 40px 80px rgba(0,0,0,0.4)',
-          }}>
-            <div style={{ position: 'absolute', top: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,97,245,0.18) 0%,transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -60, right: -60, width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle,rgba(139,92,246,0.14) 0%,transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 100, padding: '5px 14px', marginBottom: 22 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.8)', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#10b981', fontFamily: 'Sora,sans-serif' }}>Your account is ready</span>
-              </div>
-              <h2 style={{ fontSize: 'clamp(2rem,4vw,3rem)', margin: '0 auto 16px', maxWidth: 500, lineHeight: 1.1 }}>
-                Ready to take control of your finances?
+        {/* ══ SECURITY TRUST ════════════════════════════════════════════ */}
+        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
+            {/* Left: security content */}
+            <div className="animate-fade-up">
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-400)', letterSpacing: '0.12em', fontFamily: 'Sora,sans-serif', marginBottom: 10, textTransform: 'uppercase' }}>
+                ENTERPRISE SECURITY
+              </p>
+              <h2 style={{ fontSize: 'clamp(1.6rem,4vw,2.5rem)', marginBottom: 16 }}>
+                Your security is our{' '}
+                <span className="gradient-text">top priority</span>
               </h2>
-              <p style={{ fontSize: 16, color: 'rgba(240,244,255,0.5)', maxWidth: 420, margin: '0 auto 36px', lineHeight: 1.7 }}>
-                Your dashboard is waiting. Explore cards, transactions, rewards, and real-time analytics.
+              <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
+                Every Credify account is protected by multiple layers of enterprise-grade security.
+                We never compromise on protecting your financial data.
               </p>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="btn-primary"
-                style={{ fontSize: 15, padding: '15px 36px', borderRadius: 14 }}
-              >
-                <Users size={16} /> Go to My Dashboard <ArrowRight size={15} />
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {['SOC 2 Type II Compliant', 'End-to-end encrypted card data', 'Two-factor authentication support', 'Automatic fraud detection'].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <CheckCircle size={16} color="#10b981" />
+                    <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: security pillars grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {SECURITY.map(({ icon: Icon, color, title, desc }, i) => (
+                <div
+                  key={i}
+                  className={`glass-card animate-fade-up delay-${(i + 1) * 100}`}
+                  style={{ padding: '22px 20px' }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, marginBottom: 14,
+                    background: `${color}12`, border: `1px solid ${color}25`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon size={18} color={color} />
+                  </div>
+                  <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{title}</h4>
+                  <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── keyframes ── */}
-      <style>{`
-        @keyframes gradShift    { 0%{background-position:0% center} 100%{background-position:200% center} }
-        @keyframes spinRing     { to{transform:rotate(360deg)} }
-        @keyframes orbDrift1    { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-30px)} }
-        @keyframes orbDrift2    { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
-        @keyframes bounce       { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
-        @keyframes fbFloat      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes pulse-glow   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.2)} }
-      `}</style>
-    </div>
-  );
-};
-
-// ─── Public Home (unauthenticated) ────────────────────────────────────────────
-const PublicHome = ({ navigate }) => {
-  const [go, setGo] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setGo(true), 300); return () => clearTimeout(t); }, []);
-  const c1 = useCounter(12000, 1800, go);
-
-  const FEATURES = [
-    { icon: Lock,       title: 'Secure by design',   desc: 'ISO 27001 certified. PCI DSS compliant. End-to-end encryption on every request.',                         color: '#10b981' },
-    { icon: Zap,        title: 'Instant issuance',   desc: 'Virtual cards issued in seconds. No waiting, no paperwork.',                                               color: '#3b61f5' },
-    { icon: TrendingUp, title: 'Smart insights',     desc: 'AI-powered spend analytics that work for you, not just at you.',                                           color: '#8b5cf6' },
-    { icon: Globe,      title: 'Built for global',   desc: 'Multi-currency, multi-region. Designed for the international financial market.',                           color: '#06b6d4' },
-    { icon: Star,       title: 'Rewards platform',   desc: 'Every spend earns. Every point counts. Redeem for cashback or vouchers instantly.',                        color: '#f59e0b' },
-    { icon: Activity,   title: 'Live monitoring',    desc: 'Real-time transaction alerts and live dashboard — always know where your money is.',                       color: '#ec4899' },
-  ];
-
-  return (
-    <div style={{ overflowX: 'hidden' }}>
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden', paddingTop: 80 }}>
-        <ParticleField />
-        <div style={{ position: 'absolute', top: '-15%', left: '-8%', width: 650, height: 650, borderRadius: '50%', background: 'radial-gradient(circle,rgba(59,97,245,0.1) 0%,transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(139,92,246,0.08) 0%,transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'linear-gradient(rgba(59,97,245,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,97,245,0.04) 1px,transparent 1px)',
-          backgroundSize: '72px 72px',
-          maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%)',
-        }} />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ width: '100%', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center', minHeight: '85vh' }}>
-            <div>
-              <div className="animate-fade-up" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(59,97,245,0.1)', border: '1px solid rgba(59,97,245,0.22)', borderRadius: 100, padding: '6px 16px', marginBottom: 28 }}>
-                <Lock size={11} color="#6089ff" />
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#6089ff', fontFamily: 'Sora,sans-serif', letterSpacing: '0.04em' }}>BANK-GRADE SECURITY · {c1.toLocaleString()}+ USERS</span>
-              </div>
-              <h1 className="animate-fade-up delay-100" style={{ fontSize: 'clamp(2.8rem,5.5vw,4.4rem)', lineHeight: 1.05, letterSpacing: '-0.04em', margin: '0 0 24px' }}>
-                The modern{' '}
-                <span className="gradient-text">virtual card</span><br />
-                platform
-              </h1>
-              <p className="animate-fade-up delay-200" style={{ fontSize: 17, lineHeight: 1.75, color: 'rgba(240,244,255,0.55)', maxWidth: 460, margin: '0 0 36px' }}>
-                Issue, manage and control virtual credit cards with enterprise-grade security and real-time intelligence. Built for the global financial market.
+        {/* ══ TESTIMONIALS ══════════════════════════════════════════════ */}
+        <section style={{
+          padding: '80px 24px',
+          background: 'var(--bg-subtle)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: 52 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-400)', letterSpacing: '0.12em', fontFamily: 'Sora,sans-serif', marginBottom: 10, textTransform: 'uppercase' }}>
+                LOVED BY USERS
               </p>
-              <div className="animate-fade-up delay-300" style={{ display: 'flex', gap: 12 }}>
-                <button className="btn-primary" style={{ fontSize: 14, padding: '13px 28px', borderRadius: 13 }} onClick={() => navigate('/register')}>Get Started Free <ArrowRight size={15} /></button>
-                <button className="btn-secondary" style={{ fontSize: 14, padding: '13px 24px', borderRadius: 13 }} onClick={() => navigate('/features')}>See Features</button>
-              </div>
+              <h2 style={{ fontSize: 'clamp(1.75rem,4vw,2.75rem)', margin: '0 auto', maxWidth: 480 }}>
+                What our users say
+              </h2>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', height: 440 }} className="animate-fade-up delay-400">
-              <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', border: '1px solid rgba(59,97,245,0.1)', animation: 'spinRing 25s linear infinite', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', width: 8, height: 8, borderRadius: '50%', background: '#3b61f5', boxShadow: '0 0 12px rgba(59,97,245,0.8)' }} />
-              </div>
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
-                <HeroCard user={{ username: 'JOHN DOE' }} />
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+              {TESTIMONIALS.map(({ name, role, avatar, color, stars, text }, i) => (
+                <div
+                  key={i}
+                  className={`glass-card animate-fade-up delay-${(i + 1) * 100}`}
+                  style={{ padding: '28px 26px' }}
+                >
+                  {/* Stars */}
+                  <div style={{ display: 'flex', gap: 3, marginBottom: 16 }}>
+                    {Array.from({ length: stars }).map((_, j) => (
+                      <Star key={j} size={13} color="#f59e0b" fill="#f59e0b" />
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 20px', fontStyle: 'italic' }}>
+                    "{text}"
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${color}, ${color}99)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'Sora,sans-serif',
+                      flexShrink: 0,
+                    }}>
+                      {avatar}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Sora,sans-serif', color: 'var(--text-primary)' }}>{name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '18px 0' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-            {[{ v: '$2.4M+', l: 'Transactions' }, { v: '99.9%', l: 'Uptime' }, { v: '38K+', l: 'Cards Issued' }, { v: '12K+', l: 'Active Users' }].map(({ v, l }, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 'clamp(1.4rem,2.5vw,2rem)', fontWeight: 800, fontFamily: 'Sora,sans-serif', color: '#f0f4ff', letterSpacing: '-0.03em', lineHeight: 1 }}>{v}</div>
-                <div style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 4 }}>{l}</div>
+        {/* ══ CTA ═══════════════════════════════════════════════════════ */}
+        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+          <div
+            className="glass-card animate-fade-up"
+            style={{
+              padding: '72px 40px',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(59,97,245,0.06) 0%, rgba(139,92,246,0.04) 50%, rgba(6,182,212,0.03) 100%)',
+            }}
+          >
+            {/* Top glow */}
+            <div style={{
+              position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+              width: 400, height: 200,
+              background: 'radial-gradient(ellipse at top, rgba(59,97,245,0.15) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
+            {/* Top accent line */}
+            <div style={{
+              position: 'absolute', top: 0, left: '20%', right: '20%', height: 2,
+              background: 'linear-gradient(90deg, transparent, rgba(59,97,245,0.5), rgba(139,92,246,0.5), transparent)',
+              borderRadius: 2,
+            }} />
+
+            {!isLoggedIn && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 999, marginBottom: 20,
+                background: 'rgba(59,97,245,0.08)',
+                border: '1px solid rgba(59,97,245,0.2)',
+                fontSize: 11, fontWeight: 700, color: 'var(--brand-400)',
+                fontFamily: 'Sora,sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase',
+              }}>
+                <Sparkles size={10} /> FREE TO START
               </div>
-            ))}
+            )}
+
+            <h2 style={{ fontSize: 'clamp(1.75rem,4vw,2.75rem)', marginBottom: 14, position: 'relative' }}>
+              {isLoggedIn ? 'Ready to manage your cards?' : 'Start for free today'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, maxWidth: 440, margin: '0 auto 36px', lineHeight: 1.7, position: 'relative' }}>
+              {isLoggedIn
+                ? 'Head to your dashboard to issue new cards, track transactions, and redeem rewards.'
+                : 'Join over 12,000 users who trust Credify to manage their virtual cards securely.'
+              }
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
+              {isLoggedIn ? (
+                <button className="btn-primary" style={{ fontSize: 15, padding: '14px 32px' }} onClick={() => navigate('/dashboard')}>
+                  Open Dashboard <ArrowRight size={16} />
+                </button>
+              ) : (
+                <>
+                  <button className="btn-primary" style={{ fontSize: 15, padding: '14px 32px' }} onClick={() => navigate('/register')}>
+                    Create Free Account <ArrowRight size={16} />
+                  </button>
+                  <button className="btn-secondary" style={{ fontSize: 15, padding: '14px 28px' }} onClick={() => navigate('/pricing')}>
+                    View Pricing
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </section>
+
       </div>
-
-      <section id="features-section" style={{ padding: '100px 0' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b61f5', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'Sora,sans-serif' }}>Why Credify</span>
-            <h2 style={{ fontSize: 'clamp(2rem,4vw,3rem)', margin: '12px 0 16px', lineHeight: 1.1 }}>Everything you <span className="gradient-text">need</span></h2>
-            <p style={{ fontSize: 15, color: 'rgba(240,244,255,0.5)', maxWidth: 440, margin: '0 auto', lineHeight: 1.7 }}>Built for individuals and teams who need secure, modern virtual card infrastructure.</p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
-            {FEATURES.map((f, i) => <FeatCard key={i} {...f} />)}
-          </div>
-        </div>
-      </section>
-
-      <section style={{ padding: '80px 0' }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div style={{ borderRadius: 28, padding: '64px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg,rgba(59,97,245,0.12),rgba(139,92,246,0.08))', border: '1px solid rgba(59,97,245,0.2)', boxShadow: '0 40px 80px rgba(0,0,0,0.4)' }}>
-            <h2 style={{ fontSize: 'clamp(2rem,4vw,3rem)', margin: '0 auto 16px', maxWidth: 500, lineHeight: 1.1 }}>Ready to get started?</h2>
-            <p style={{ fontSize: 16, color: 'rgba(240,244,255,0.5)', maxWidth: 400, margin: '0 auto 36px', lineHeight: 1.7 }}>Join thousands managing virtual cards with Credify.</p>
-            <button className="btn-primary" style={{ fontSize: 15, padding: '15px 36px', borderRadius: 14 }} onClick={() => navigate('/register')}>
-              Create Free Account <ArrowRight size={15} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <style>{`
-        @keyframes spinRing { to{transform:rotate(360deg)} }
-      `}</style>
     </div>
   );
-};
-
-// ─── Root ─────────────────────────────────────────────────────────────────────
-const Home = () => {
-  const navigate = useNavigate();
-  const { user } = useAuthStore();
-  return user
-    ? <LoggedInHome user={user} navigate={navigate} />
-    : <PublicHome navigate={navigate} />;
 };
 
 export default Home;
