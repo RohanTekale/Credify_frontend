@@ -4,34 +4,37 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import {
-  LayoutDashboard, Users, CreditCard, Shield, LogOut,Terminal,
+  LayoutDashboard, Users, CreditCard, Shield, LogOut, Terminal,
   CheckCircle2, XCircle, AlertTriangle, UserCheck, UserX,
   Lock, Unlock, ChevronRight, RefreshCw, Search, Filter,
   TrendingUp, Activity, BarChart3, Eye, Hash, Globe,
   ArrowUpRight, ArrowDownRight, ChevronDown, Bell,
   Settings, Zap, Database, MoreHorizontal, Copy,
-  ShieldCheck, ShieldAlert, Clock, DollarSign
+  ShieldCheck, ShieldAlert, Clock, DollarSign,
+  FileText, MessageSquare, Inbox, RotateCcw, Paperclip,
+  CheckCheck, Send, Upload,
 } from 'lucide-react';
-import { adminAPI } from '../../services/api';
+import { adminAPI, requestsAPI } from '../../services/api';
 import {
   Spinner, Badge, Modal, Confirm, toast, KpiCard,
   PageHeader, DataTable, EmptyState
 } from '../../components/ui';
 
-// ─── Design Tokens ─────────────────────────────────────────────────────────────
-const ACCENT      = '#0066FF';
-const ACCENT_DARK = '#0052CC';
-const SUCCESS     = '#00C48C';
-const DANGER      = '#FF4D4F';
-const WARNING     = '#FFB020';
-const BG_DEEP     = '#05070F';
-const BG_CARD     = '#0C0F1E';
-const BG_RAISED   = '#111528';
-const BORDER      = 'rgba(255,255,255,0.06)';
-const BORDER_MID  = 'rgba(255,255,255,0.1)';
-const TEXT_1      = '#F0F4FF';
-const TEXT_2      = 'rgba(240,244,255,0.55)';
-const TEXT_3      = 'rgba(240,244,255,0.30)';
+// ─── Design Tokens — theme-aware via CSS variables ─────────────────────────────
+const ACCENT      = '#3b61f5';
+const ACCENT_DARK = '#1d37cc';
+const SUCCESS     = '#10b981';
+const DANGER      = '#ef4444';
+const WARNING     = '#f59e0b';
+// All use CSS variables so they work in both light and dark themes
+const BG_DEEP     = 'var(--bg-base)';
+const BG_CARD     = 'var(--dash-card-bg)';
+const BG_RAISED   = 'var(--bg-subtle)';
+const BORDER      = 'var(--dash-card-border)';
+const BORDER_MID  = 'var(--border)';
+const TEXT_1      = 'var(--dash-text-primary)';
+const TEXT_2      = 'var(--dash-text-secondary)';
+const TEXT_3      = 'var(--dash-text-muted)';
 
 const FONT_DISPLAY = "'DM Sans', 'Sora', sans-serif";
 const FONT_MONO    = "'JetBrains Mono', 'Fira Code', monospace";
@@ -53,14 +56,14 @@ const pill = (color, bg) => ({
 
 const StatusPill = ({ status }) => {
   const map = {
-    active:     { label: 'Active',     color: SUCCESS,  bg: 'rgba(0,196,140,0.12)' },
-    inactive:   { label: 'Inactive',   color: TEXT_2,   bg: 'rgba(255,255,255,0.06)' },
-    blocked:    { label: 'Blocked',    color: DANGER,   bg: 'rgba(255,77,79,0.12)' },
-    frozen:     { label: 'Frozen',     color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
-    verified:   { label: 'Verified',   color: SUCCESS,  bg: 'rgba(0,196,140,0.12)' },
-    pending:    { label: 'Pending',    color: WARNING,  bg: 'rgba(255,176,32,0.12)' },
-    rejected:   { label: 'Rejected',  color: DANGER,   bg: 'rgba(255,77,79,0.12)' },
-    unverified: { label: 'Unverified', color: TEXT_2,  bg: 'rgba(255,255,255,0.06)' },
+    active:     { label: 'Active',     color: '#059669',  bg: 'rgba(16,185,129,0.12)'  },
+    inactive:   { label: 'Inactive',   color: '#64748b',  bg: 'rgba(100,116,139,0.14)' },
+    blocked:    { label: 'Blocked',    color: DANGER,     bg: 'rgba(239,68,68,0.12)'   },
+    frozen:     { label: 'Frozen',     color: '#3b82f6',  bg: 'rgba(59,130,246,0.12)'  },
+    verified:   { label: 'Verified',   color: '#059669',  bg: 'rgba(16,185,129,0.12)'  },
+    pending:    { label: 'Pending',    color: '#d97706',  bg: 'rgba(245,158,11,0.12)'  },
+    rejected:   { label: 'Rejected',  color: DANGER,     bg: 'rgba(239,68,68,0.12)'   },
+    unverified: { label: 'Unverified', color: '#64748b',  bg: 'rgba(100,116,139,0.14)' },
   };
   const cfg = map[status?.toLowerCase()] || map.unverified;
   return (
@@ -122,9 +125,9 @@ const Btn = ({ children, onClick, variant = 'ghost', disabled, size = 'md', styl
   };
   const variants = {
     primary: { background: ACCENT, color: '#fff', boxShadow: `0 0 20px ${ACCENT}40` },
-    ghost: { background: 'rgba(255,255,255,0.05)', color: TEXT_1, border: `1px solid ${BORDER_MID}` },
-    danger: { background: 'rgba(255,77,79,0.1)', color: DANGER, border: '1px solid rgba(255,77,79,0.2)' },
-    success: { background: 'rgba(0,196,140,0.1)', color: SUCCESS, border: '1px solid rgba(0,196,140,0.2)' },
+    ghost: { background: 'var(--bg-card)', color: TEXT_1, border: `1px solid ${BORDER_MID}` },
+    danger: { background: 'rgba(239,68,68,0.1)', color: DANGER, border: '1px solid rgba(239,68,68,0.2)' },
+    success: { background: 'rgba(16,185,129,0.1)', color: SUCCESS, border: '1px solid rgba(16,185,129,0.2)' },
   };
   return <button onClick={onClick} disabled={disabled} style={{ ...base, ...variants[variant], ...sx }}>{children}</button>;
 };
@@ -134,7 +137,7 @@ const Input = ({ label, ...props }) => (
   <div>
     {label && <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: TEXT_3, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</label>}
     <input style={{
-      width: '100%', background: BG_DEEP, border: `1px solid ${BORDER_MID}`,
+      width: '100%', background: 'var(--bg-card)', border: `1px solid ${BORDER_MID}`,
       borderRadius: 10, padding: '10px 14px', color: TEXT_1, fontSize: 13,
       fontFamily: FONT_DISPLAY, outline: 'none', boxSizing: 'border-box',
     }} {...props}/>
@@ -145,7 +148,7 @@ const Select = ({ label, children, ...props }) => (
   <div>
     {label && <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: TEXT_3, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</label>}
     <select style={{
-      width: '100%', background: BG_DEEP, border: `1px solid ${BORDER_MID}`,
+      width: '100%', background: 'var(--bg-card)', border: `1px solid ${BORDER_MID}`,
       borderRadius: 10, padding: '10px 14px', color: TEXT_1, fontSize: 13,
       fontFamily: FONT_DISPLAY, outline: 'none', appearance: 'none',
     }} {...props}>{children}</select>
@@ -156,7 +159,7 @@ const Textarea = ({ label, ...props }) => (
   <div>
     {label && <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: TEXT_3, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</label>}
     <textarea style={{
-      width: '100%', background: BG_DEEP, border: `1px solid ${BORDER_MID}`,
+      width: '100%', background: 'var(--bg-card)', border: `1px solid ${BORDER_MID}`,
       borderRadius: 10, padding: '10px 14px', color: TEXT_1, fontSize: 13,
       fontFamily: FONT_DISPLAY, outline: 'none', resize: 'vertical', boxSizing: 'border-box',
     }} {...props}/>
@@ -167,8 +170,8 @@ const Textarea = ({ label, ...props }) => (
 const PModal = ({ open, onClose, title, children, width = 460 }) => {
   if (!open) return null;
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ ...card({ padding: 28 }), width: '100%', maxWidth: width, animation: 'fadeUp 0.2s ease' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ ...card({ padding: 28 }), width: '100%', maxWidth: width, animation: 'fadeUp 0.2s ease', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 800, color: TEXT_1, margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_2, cursor: 'pointer', padding: 4 }}>
@@ -203,7 +206,7 @@ const PTable = ({ columns, rows, empty }) => (
 
 const TR = ({ children, onClick }) => (
   <tr style={{ borderBottom: `1px solid ${BORDER}`, cursor: onClick ? 'pointer' : 'default', transition: 'background 0.15s' }}
-    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+    onMouseEnter={e => e.currentTarget.style.background = 'var(--dash-row-hover)'}
     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     onClick={onClick}>
     {children}
@@ -230,7 +233,7 @@ const SearchBar = ({ value, onChange, placeholder }) => (
   <div style={{ position: 'relative', marginBottom: 16 }}>
     <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: TEXT_3, pointerEvents: 'none' }}/>
     <input
-      style={{ width: '100%', background: BG_DEEP, border: `1px solid ${BORDER_MID}`, borderRadius: 12, padding: '11px 14px 11px 38px', color: TEXT_1, fontSize: 13, fontFamily: FONT_DISPLAY, outline: 'none', boxSizing: 'border-box' }}
+      style={{ width: '100%', background: 'var(--bg-subtle)', border: `1px solid ${BORDER_MID}`, borderRadius: 12, padding: '11px 14px 11px 38px', color: TEXT_1, fontSize: 13, fontFamily: FONT_DISPLAY, outline: 'none', boxSizing: 'border-box' }}
       placeholder={placeholder || 'Search…'} value={value} onChange={onChange}
     />
   </div>
@@ -238,12 +241,13 @@ const SearchBar = ({ value, onChange, placeholder }) => (
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────────
 const NAV = [
-  { id: 'overview',  icon: LayoutDashboard, label: 'Overview'    },
-  { id: 'users',     icon: Users,           label: 'Users'       },
-  { id: 'cards',     icon: CreditCard,      label: 'Cards'       },
-  { id: 'kyc',       icon: Shield,          label: 'KYC Review'  },
-  { id: 'analytics', icon: BarChart3,       label: 'Analytics'   },
-  { id: '__dev__',   icon: Terminal,        label: 'Dev Panel',  isDevLink: true },
+  { id: 'overview',  icon: LayoutDashboard, label: 'Overview'           },
+  { id: 'users',     icon: Users,           label: 'Users'              },
+  { id: 'cards',     icon: CreditCard,      label: 'Cards'              },
+  { id: 'kyc',       icon: Shield,          label: 'KYC Review'         },
+  { id: 'requests',  icon: Inbox,           label: 'Requests Received'  },
+  { id: 'analytics', icon: BarChart3,       label: 'Analytics'          },
+  { id: '__dev__',   icon: Terminal,        label: 'Dev Panel', isLink: true, to: '/dev' },
 ];
 
 const Sidebar = ({ active, setActive, onLogout,navigate }) => (
@@ -268,6 +272,15 @@ const Sidebar = ({ active, setActive, onLogout,navigate }) => (
         <span style={{ fontSize: 10, fontWeight: 800, color: DANGER, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Admin Access</span>
       </div>
       <div style={{ fontSize: 11, color: TEXT_3, marginTop: 3 }}>Full system control</div>
+    </div>
+
+    {/* ADMIN MODE chip — visible in sidebar only */}
+    <div style={{ margin: '0 10px 10px', padding: '7px 12px', borderRadius: 9, background: 'rgba(255,77,79,0.06)', border: '1px solid rgba(255,77,79,0.15)', display: 'flex', alignItems: 'center', gap: 7 }}>
+      <ShieldCheck size={12} color={DANGER}/>
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 800, color: DANGER, letterSpacing: '0.07em' }}>ADMIN MODE</div>
+        <div style={{ fontSize: 10, color: TEXT_3, marginTop: 1 }}>Full system access</div>
+      </div>
     </div>
 
     <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_3, letterSpacing: '0.1em', padding: '0 10px', marginBottom: 8, textTransform: 'uppercase' }}>Management</div>
@@ -773,6 +786,333 @@ const KYCReviewTab = ({ users, loading, onRefresh }) => {
   );
 };
 
+// ─── Requests Received Tab ─────────────────────────────────────────────────────
+const REQ_STATUS_MAP = {
+  raised:      { color: '#d97706', bg: 'rgba(245,158,11,0.12)',  label: 'Raised',     icon: Clock       },
+  'in process':{ color: '#3b61f5', bg: 'rgba(59,97,245,0.12)',   label: 'In Process', icon: Activity    },
+  completed:   { color: '#059669', bg: 'rgba(16,185,129,0.12)',  label: 'Completed',  icon: CheckCheck  },
+  approved:    { color: '#059669', bg: 'rgba(16,185,129,0.12)',  label: 'Approved',   icon: CheckCircle2},
+  rejected:    { color: '#dc2626', bg: 'rgba(239,68,68,0.12)',   label: 'Rejected',   icon: XCircle     },
+};
+
+const ReqStatusPill = ({ status }) => {
+  const cfg = REQ_STATUS_MAP[status?.toLowerCase()] || REQ_STATUS_MAP.raised;
+  const Icon = cfg.icon;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: cfg.color, background: cfg.bg }}>
+      <Icon size={10} /> {cfg.label}
+    </span>
+  );
+};
+
+const RequestsReceivedTab = ({ onRefresh }) => {
+  const [requests, setRequests]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [filter, setFilter]           = useState('all');
+  const [search, setSearch]           = useState('');
+  const [selected, setSelected]       = useState(null);
+  const [detailModal, setDetailModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState({});
+  const [adminComment, setAdminComment]   = useState('');
+  const [commenting, setCommenting]       = useState(false);
+  const [statusForm, setStatusForm]       = useState({ status: '', admin_comment: '' });
+  const [statusModal, setStatusModal]     = useState(false);
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await requestsAPI.listAll();
+      const arr = Array.isArray(data) ? data : data?.data?.results || data?.results || [];
+      setRequests(arr);
+    } catch {
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  const counts = {
+    all:         requests.length,
+    raised:      requests.filter(r => r.status?.toLowerCase() === 'raised').length,
+    'in process':requests.filter(r => r.status?.toLowerCase() === 'in process').length,
+    completed:   requests.filter(r => r.status?.toLowerCase() === 'completed').length,
+    rejected:    requests.filter(r => r.status?.toLowerCase() === 'rejected').length,
+  };
+
+  const filtered = requests
+    .filter(r => filter === 'all' || r.status?.toLowerCase() === filter)
+    .filter(r =>
+      !search ||
+      String(r.id).includes(search) ||
+      (r.request_type || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.username || r.user || '').toLowerCase().includes(search.toLowerCase())
+    );
+
+  const openDetail = (req) => {
+    setSelected(req);
+    setDetailModal(true);
+    setAdminComment('');
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!statusForm.status) return;
+    setActionLoading(s => ({ ...s, [selected.id]: 'status' }));
+    try {
+      await requestsAPI.updateStatus(selected.id, {
+        status: statusForm.status,
+        admin_comment: statusForm.admin_comment,
+      });
+      toast.success('Status updated successfully.');
+      setStatusModal(false);
+      setStatusForm({ status: '', admin_comment: '' });
+      fetchRequests();
+      setDetailModal(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setActionLoading(s => ({ ...s, [selected.id]: null }));
+    }
+  };
+
+  const handleAdminComment = async () => {
+    if (!adminComment.trim()) return;
+    setCommenting(true);
+    try {
+      await requestsAPI.adminComment(selected.id, { comment: adminComment });
+      toast.success('Comment posted.');
+      setAdminComment('');
+      fetchRequests();
+      setDetailModal(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setCommenting(false);
+    }
+  };
+
+  const FILTER_TABS = [
+    { id: 'all',         label: 'All'        },
+    { id: 'raised',      label: 'Raised'     },
+    { id: 'in process',  label: 'In Process' },
+    { id: 'completed',   label: 'Completed'  },
+    { id: 'rejected',    label: 'Rejected'   },
+  ];
+
+  return (
+    <div>
+      <SectionHeader
+        title="Requests Received"
+        subtitle={`${requests.length} total requests from users`}
+        actions={
+          <Btn variant="ghost" onClick={fetchRequests}>
+            <RefreshCw size={13} /> Refresh
+          </Btn>
+        }
+      />
+
+      {/* Filter tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: BG_DEEP, borderRadius: 12, width: 'fit-content', border: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
+        {FILTER_TABS.map(({ id, label }) => (
+          <button key={id} onClick={() => setFilter(id)} style={{
+            padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+            background: filter === id ? BG_RAISED : 'transparent',
+            color: filter === id ? ACCENT : TEXT_2,
+            fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700,
+            boxShadow: filter === id ? `0 0 0 1px ${ACCENT}30` : 'none',
+            transition: 'all 0.15s',
+          }}>
+            {label}
+            {counts[id] > 0 && (
+              <span style={{ marginLeft: 6, padding: '1px 6px', borderRadius: 10, background: filter === id ? `${ACCENT}20` : 'rgba(128,128,128,0.12)', color: filter === id ? ACCENT : TEXT_3, fontSize: 10, fontFamily: FONT_MONO }}>
+                {counts[id]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by request ID, type, or username…" />
+
+      {/* Table */}
+      {loading ? (
+        <div style={{ padding: 48, textAlign: 'center' }}><Spinner size={24} /></div>
+      ) : filtered.length === 0 ? (
+        <div style={{ ...card({ padding: 48 }), textAlign: 'center' }}>
+          <Inbox size={40} color={TEXT_3} style={{ margin: '0 auto 12px' }} />
+          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: TEXT_1, marginBottom: 6 }}>No requests found</div>
+          <div style={{ color: TEXT_2, fontSize: 13 }}>{search ? 'Try a different search term.' : `No ${filter === 'all' ? '' : filter} requests yet.`}</div>
+        </div>
+      ) : (
+        <div style={card({ padding: 0, overflow: 'hidden' })}>
+          <PTable
+            columns={['Req ID', 'User', 'Type', 'Description', 'Status', 'Date', 'Actions']}
+            rows={filtered.map((req) => (
+              <TR key={req.id} onClick={() => openDetail(req)}>
+                <TD mono muted>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: ACCENT }}>#{req.id}</span>
+                </TD>
+                <TD>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Avatar name={req.username || req.user || 'U'} size={28} />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: TEXT_1 }}>{req.username || req.user || '—'}</div>
+                      {req.user_id && <div style={{ fontSize: 10, color: TEXT_3 }}>ID #{req.user_id}</div>}
+                    </div>
+                  </div>
+                </TD>
+                <TD>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_1, background: `${ACCENT}10`, border: `1px solid ${ACCENT}18`, borderRadius: 6, padding: '2px 8px' }}>
+                    {req.request_type || 'General'}
+                  </span>
+                </TD>
+                <TD muted style={{ fontSize: 12, maxWidth: 220 }}>
+                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {req.description || '—'}
+                  </span>
+                </TD>
+                <TD><ReqStatusPill status={req.status || 'raised'} /></TD>
+                <TD muted style={{ fontSize: 11 }}>
+                  {req.created_at ? new Date(req.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                </TD>
+                <TD>
+                  <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                    <Btn size="sm" variant="primary" onClick={() => { setSelected(req); setStatusForm({ status: req.status || 'raised', admin_comment: req.admin_comment || '' }); setStatusModal(true); }}>
+                      <CheckCircle2 size={11} /> Update
+                    </Btn>
+                    <Btn size="sm" variant="ghost" onClick={() => openDetail(req)}>
+                      <Eye size={11} /> View
+                    </Btn>
+                  </div>
+                </TD>
+              </TR>
+            ))}
+          />
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      <PModal open={detailModal} onClose={() => { setDetailModal(false); setSelected(null); }} title={`Request #${selected?.id} — Details`} width={580}>
+        {selected && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Grid info */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              {[
+                { label: 'Request ID',   value: `#${selected.id}` },
+                { label: 'User',         value: selected.username || selected.user || '—' },
+                { label: 'User ID',      value: selected.user_id ? `#${selected.user_id}` : '—' },
+                { label: 'Type',         value: selected.request_type || 'General' },
+                { label: 'Status',       value: <ReqStatusPill status={selected.status || 'raised'} /> },
+                { label: 'Date',         value: selected.created_at ? new Date(selected.created_at).toLocaleDateString('en-IN') : '—' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ padding: '10px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}` }}>
+                  <div style={{ fontSize: 9, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_1 }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Description */}
+            <div style={{ padding: '12px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}` }}>
+              <div style={{ fontSize: 10, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>User Description</div>
+              <p style={{ fontSize: 13, color: TEXT_2, margin: 0, lineHeight: 1.7 }}>{selected.description || 'No description.'}</p>
+            </div>
+
+            {/* User comment */}
+            {selected.user_comment && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: `${ACCENT}06`, border: `1px solid ${ACCENT}18` }}>
+                <div style={{ fontSize: 10, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 6 }}>User Comment</div>
+                <p style={{ fontSize: 13, color: TEXT_1, margin: 0, lineHeight: 1.7 }}>{selected.user_comment}</p>
+              </div>
+            )}
+
+            {/* Uploaded document */}
+            {selected.document_url && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Paperclip size={14} color={TEXT_3} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: TEXT_3, marginBottom: 3 }}>Uploaded Document</div>
+                  <a href={selected.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>View Document →</a>
+                </div>
+              </div>
+            )}
+
+            {/* Admin comment (existing) */}
+            {selected.admin_comment && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)' }}>
+                <div style={{ fontSize: 10, color: SUCCESS, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 6 }}>Admin Comment</div>
+                <p style={{ fontSize: 13, color: TEXT_1, margin: 0, lineHeight: 1.7 }}>{selected.admin_comment}</p>
+              </div>
+            )}
+
+            {/* Add admin comment */}
+            <div>
+              <div style={{ fontSize: 10, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 8 }}>Post Admin Comment</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Textarea
+                  rows={2}
+                  placeholder="Write a comment for the user..."
+                  value={adminComment}
+                  onChange={e => setAdminComment(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <Btn variant="primary" onClick={handleAdminComment} disabled={!adminComment.trim() || commenting}>
+                  {commenting ? <Spinner size={12} color="#fff" /> : <Send size={13} />}
+                </Btn>
+              </div>
+            </div>
+
+            {/* Quick status actions */}
+            <div style={{ display: 'flex', gap: 8, paddingTop: 4, borderTop: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: TEXT_3, alignSelf: 'center', flex: 1 }}>Quick actions:</span>
+              {[
+                { label: 'Approve',    status: 'approved',    variant: 'success' },
+                { label: 'In Process', status: 'in process',  variant: 'ghost'   },
+                { label: 'Complete',   status: 'completed',   variant: 'ghost'   },
+                { label: 'Reject',     status: 'rejected',    variant: 'danger'  },
+              ].map(({ label, status, variant }) => (
+                <Btn key={status} size="sm" variant={variant}
+                  disabled={!!actionLoading[selected?.id] || selected?.status?.toLowerCase() === status}
+                  onClick={async () => {
+                    setActionLoading(s => ({ ...s, [selected.id]: status }));
+                    try {
+                      await requestsAPI.updateStatus(selected.id, { status, admin_comment: adminComment || undefined });
+                      toast.success(`Request marked as ${label}.`);
+                      fetchRequests();
+                      setDetailModal(false);
+                    } catch (err) { toast.error(err.message); }
+                    finally { setActionLoading(s => ({ ...s, [selected.id]: null })); }
+                  }}>
+                  {actionLoading[selected?.id] === status ? <Spinner size={10} color="#fff" /> : label}
+                </Btn>
+              ))}
+            </div>
+          </div>
+        )}
+      </PModal>
+
+      {/* Status Update Modal */}
+      <PModal open={statusModal} onClose={() => setStatusModal(false)} title={`Update Request #${selected?.id}`} width={420}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Select label="New Status" value={statusForm.status} onChange={e => setStatusForm(s => ({ ...s, status: e.target.value }))}>
+            <option value="raised">Raised</option>
+            <option value="in process">In Process</option>
+            <option value="completed">Completed</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </Select>
+          <Textarea label="Admin Comment (optional)" rows={3} placeholder="Reason for this status change..." value={statusForm.admin_comment} onChange={e => setStatusForm(s => ({ ...s, admin_comment: e.target.value }))} />
+          <Btn variant="primary" onClick={handleStatusUpdate} disabled={!statusForm.status || !!actionLoading[selected?.id]} style={{ justifyContent: 'center' }}>
+            {actionLoading[selected?.id] === 'status' ? <><Spinner size={13} color="#fff" /> Updating…</> : 'Update Status'}
+          </Btn>
+        </div>
+      </PModal>
+    </div>
+  );
+};
+
 // ─── Analytics Tab ─────────────────────────────────────────────────────────────
 const AnalyticsTab = ({ users, cards }) => {
   const kycBreakdown = {
@@ -785,76 +1125,131 @@ const AnalyticsTab = ({ users, cards }) => {
     frozen:  cards.filter(c => c.status === 'frozen').length,
     blocked: cards.filter(c => c.status === 'blocked').length,
   };
-  const cardTypes = ['Basic', 'Silver', 'Gold', 'Platinum'].map(t => ({ type: t, count: cards.filter(c => c.card_type === t).length }));
+  const cardTypes   = ['Basic','Silver','Gold','Platinum'].map(t => ({ type: t, count: cards.filter(c => c.card_type === t).length }));
   const totalCredit = cards.reduce((s, c) => s + Number(c.credit_limit || 0), 0);
+  const activeUsers = users.filter(u => u.is_active !== false).length;
+  const kycRate     = users.length > 0 ? Math.round((kycBreakdown.verified / users.length) * 100) : 0;
 
   const Bar = ({ label, value, max, color, showPct }) => {
-    const pct = max > 0 ? (value / max) * 100 : 0;
+    const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
     return (
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 7 }}>
-          <span style={{ color: TEXT_2 }}>{label}</span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {showPct && <span style={{ color: TEXT_3, fontSize: 11 }}>{pct.toFixed(0)}%</span>}
-            <span style={{ fontWeight: 700, color: TEXT_1, fontFamily: FONT_MONO }}>{value}</span>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6, alignItems: 'center' }}>
+          <span style={{ color: TEXT_2, fontWeight: 500 }}>{label}</span>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {showPct && <span style={{ color: TEXT_3, fontSize: 11, fontFamily: FONT_MONO }}>{pct.toFixed(0)}%</span>}
+            <span style={{ fontWeight: 800, color: TEXT_1, fontFamily: FONT_MONO, fontSize: 14 }}>{value}</span>
           </div>
         </div>
-        <div style={{ height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: color, transition: 'width 700ms cubic-bezier(0.4,0,0.2,1)' }}/>
+        <div style={{ height: 6, borderRadius: 3, background: 'var(--progress-track)', overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: `linear-gradient(90deg, ${color}, ${color}90)`, transition: 'width 800ms cubic-bezier(0.16,1,0.3,1)', boxShadow: `0 0 8px ${color}40` }}/>
         </div>
       </div>
+    );
+  };
+
+  // Mini donut SVG
+  const Donut = ({ value, max, color, size = 64 }) => {
+    const pct = max > 0 ? Math.min(1, value / max) : 0;
+    const r = 26, cx = 32, cy = 32;
+    const circ = 2 * Math.PI * r;
+    const dash  = pct * circ;
+    const gap   = circ - dash;
+    return (
+      <svg width={size} height={size} viewBox="0 0 64 64">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"/>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="8"
+          strokeDasharray={`${dash} ${gap}`} strokeLinecap="round"
+          transform="rotate(-90 32 32)" style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.16,1,0.3,1)' }}/>
+      </svg>
     );
   };
 
   return (
     <div>
       <SectionHeader title="Analytics" subtitle="Platform statistics and distribution overview"/>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+
+      {/* Top KPI row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 24 }}>
+        {[
+          { label: 'Total Users',    value: users.length,             color: ACCENT,   icon: Users },
+          { label: 'Active Users',   value: activeUsers,              color: SUCCESS,  icon: UserCheck },
+          { label: 'Total Cards',    value: cards.length,             color: '#7c3aed',icon: CreditCard },
+          { label: 'KYC Rate',       value: `${kycRate}%`,            color: SUCCESS,  icon: Shield },
+          { label: 'Pending KYC',    value: kycBreakdown.pending,     color: WARNING,  icon: Clock },
+          { label: 'Total Credit',   value: `₹${(totalCredit/100000).toFixed(2)}L`, color: ACCENT, icon: DollarSign },
+        ].map(({ label, value, color, icon: Icon }) => (
+          <div key={label} style={{ ...card({ padding: '16px 18px' }), animation: 'fadeUp 0.4s ease both' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: `${color}15`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={13} color={color} />
+              </div>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color, fontFamily: FONT_DISPLAY, letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: 11, color: TEXT_3, marginTop: 4 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 16 }}>
+        {/* KYC Status */}
         <div style={{ ...card({ padding: 24 }), animation: 'fadeUp 0.4s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-            <Shield size={14} color={ACCENT}/>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>KYC Status</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Shield size={14} color={ACCENT}/>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>KYC Status</h3>
+            </div>
+            <Donut value={kycBreakdown.verified} max={users.length} color={SUCCESS} />
           </div>
-          <Bar label="Verified" value={kycBreakdown.verified} max={users.length} color={SUCCESS} showPct/>
-          <Bar label="Pending"  value={kycBreakdown.pending}  max={users.length} color={WARNING} showPct/>
-          <Bar label="Rejected" value={kycBreakdown.rejected} max={users.length} color={DANGER}  showPct/>
+          <Bar label="Verified" value={kycBreakdown.verified} max={users.length} color={SUCCESS}  showPct/>
+          <Bar label="Pending"  value={kycBreakdown.pending}  max={users.length} color={WARNING}  showPct/>
+          <Bar label="Rejected" value={kycBreakdown.rejected} max={users.length} color={DANGER}   showPct/>
         </div>
 
+        {/* Card Status */}
         <div style={{ ...card({ padding: 24 }), animation: 'fadeUp 0.4s ease 80ms both' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-            <CreditCard size={14} color={SUCCESS}/>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>Card Status</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CreditCard size={14} color={SUCCESS}/>
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>Card Status</h3>
+            </div>
+            <Donut value={cardBreakdown.active} max={cards.length} color={SUCCESS} />
           </div>
-          <Bar label="Active"  value={cardBreakdown.active}  max={cards.length} color={SUCCESS} showPct/>
-          <Bar label="Frozen"  value={cardBreakdown.frozen}  max={cards.length} color="#60A5FA" showPct/>
-          <Bar label="Blocked" value={cardBreakdown.blocked} max={cards.length} color={DANGER}  showPct/>
+          <Bar label="Active"  value={cardBreakdown.active}  max={Math.max(cards.length,1)} color={SUCCESS}   showPct/>
+          <Bar label="Frozen"  value={cardBreakdown.frozen}  max={Math.max(cards.length,1)} color="#60A5FA"   showPct/>
+          <Bar label="Blocked" value={cardBreakdown.blocked} max={Math.max(cards.length,1)} color={DANGER}    showPct/>
         </div>
 
+        {/* Card Types */}
         <div style={{ ...card({ padding: 24 }), animation: 'fadeUp 0.4s ease 160ms both' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <BarChart3 size={14} color="#7C3AED"/>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>Card Types</h3>
           </div>
-          {cardTypes.map(({ type, count }) => (
-            <Bar key={type} label={type} value={count} max={Math.max(...cardTypes.map(c => c.count), 1)} color="#7C3AED" showPct/>
-          ))}
+          {cardTypes.map(({ type, count }) => {
+            const colors = { Basic: '#60A5FA', Silver: '#94a3b8', Gold: WARNING, Platinum: '#7C3AED' };
+            return <Bar key={type} label={type} value={count} max={Math.max(...cardTypes.map(c=>c.count),1)} color={colors[type] || ACCENT} showPct/>;
+          })}
         </div>
 
+        {/* Platform Summary */}
         <div style={{ ...card({ padding: 24 }), animation: 'fadeUp 0.4s ease 240ms both' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <Database size={14} color={WARNING}/>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 13, fontWeight: 700, color: TEXT_1, margin: 0 }}>Platform Summary</h3>
           </div>
           {[
-            { label: 'Total Users',    value: users.length,              color: ACCENT    },
-            { label: 'Total Cards',    value: cards.length,              color: SUCCESS   },
-            { label: 'Verified Users', value: kycBreakdown.verified,     color: SUCCESS   },
-            { label: 'Pending Reviews',value: kycBreakdown.pending,      color: WARNING   },
-            { label: 'Total Credit',   value: `₹${(totalCredit/100000).toFixed(2)}L`, color: '#7C3AED' },
+            { label: 'Total Users',      value: users.length,            color: ACCENT    },
+            { label: 'Active Users',     value: activeUsers,             color: SUCCESS   },
+            { label: 'Total Cards',      value: cards.length,            color: '#7C3AED' },
+            { label: 'Verified Users',   value: kycBreakdown.verified,   color: SUCCESS   },
+            { label: 'Pending Reviews',  value: kycBreakdown.pending,    color: WARNING   },
+            { label: 'Total Credit',     value: `₹${(totalCredit/100000).toFixed(2)}L`, color: ACCENT },
           ].map(({ label, value, color }, i, arr) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : '' }}>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : '' }}>
               <span style={{ fontSize: 12, color: TEXT_2 }}>{label}</span>
-              <span style={{ fontSize: 16, fontWeight: 800, fontFamily: FONT_MONO, color }}>{value}</span>
+              <span style={{ fontSize: 15, fontWeight: 800, fontFamily: FONT_MONO, color }}>{value}</span>
             </div>
           ))}
         </div>
@@ -901,6 +1296,7 @@ const AdminDashboard = () => {
     users:     <UsersTab users={users} loading={loading} onRefresh={fetchAll}/>,
     cards:     <AdminCardsTab cards={cards} loading={loading} onRefresh={fetchAll}/>,
     kyc:       <KYCReviewTab users={users} loading={loading} onRefresh={fetchAll}/>,
+    requests:  <RequestsReceivedTab onRefresh={fetchAll}/>,
     analytics: <AnalyticsTab users={users} cards={cards}/>,
   };
 
@@ -915,9 +1311,9 @@ const AdminDashboard = () => {
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-        input::placeholder, textarea::placeholder { color: rgba(240,244,255,0.25); }
-        select option { background: #0C0F1E; color: #F0F4FF; }
+        ::-webkit-scrollbar-thumb { background: rgba(59,97,245,0.2); border-radius: 2px; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
+        select option { background: var(--bg-card); color: var(--text-primary); }
         button:hover { opacity: 0.88; }
       `}</style>
 
@@ -927,13 +1323,8 @@ const AdminDashboard = () => {
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 48px' }}>
           <div style={{ maxWidth: 1180, margin: '0 auto' }}>
 
-            {/* Top bar */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 10, background: 'rgba(255,77,79,0.06)', border: '1px solid rgba(255,77,79,0.15)' }}>
-                <ShieldCheck size={13} color={DANGER}/>
-                <span style={{ fontSize: 11, fontWeight: 800, color: DANGER, letterSpacing: '0.07em', fontFamily: FONT_DISPLAY }}>ADMIN MODE</span>
-                <span style={{ fontSize: 11, color: TEXT_3 }}>— Full system access</span>
-              </div>
+            {/* Top bar — title + refresh only, no ADMIN MODE banner */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 28 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ fontSize: 11, color: TEXT_3 }}>
                   Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}

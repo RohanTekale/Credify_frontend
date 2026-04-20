@@ -158,6 +158,55 @@ export const transactionAPI = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REQUESTS API  (exact endpoints from backend curl reference)
+// ─────────────────────────────────────────────────────────────────────────────
+export const requestsAPI = {
+  // ── User endpoints ──────────────────────────────────────────────────────────
+  // POST /api/requests/raise/
+  // Body: { request_type, description }  — description REQUIRED when type=other
+  // Returns: { message, request_id: "REQ-12", status: "raised" }
+  raise: (d) => http.post('/requests/raise/', d),
+
+  // GET /api/requests/my/?status=<raised|in_process|completed|rejected>
+  // Returns: [{ request_id, request_type, description, status, admin_comment,
+  //             user_comment, document, created_at, updated_at }]
+  getMyRequests: (params) => http.get('/requests/my/', { params }),
+
+  // POST /api/requests/{id}/comment/
+  // Body: { user_comment }
+  // Returns: { message: "Comment added." }
+  addComment: (id, d) => http.post(`/requests/${id}/comment/`, d),
+
+  // POST /api/requests/{id}/document/   (multipart/form-data, field: "document")
+  // Returns: { message, url }
+  uploadDoc: (id, fd) => http.post(`/requests/${id}/document/`, fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+
+  // POST /api/requests/{id}/reraise/
+  // Body: { description? }  — optional updated description
+  // Only works on status="rejected" requests belonging to the user
+  // Returns: { message, request_id: "REQ-19" }
+  reraise: (id, d = {}) => http.post(`/requests/${id}/reraise/`, d),
+
+  // ── Admin endpoints ─────────────────────────────────────────────────────────
+  // GET /api/requests/admin/?status=<raised|in_process|completed|rejected>
+  // Returns: [{ request_id, user_id, user_name, user_email, request_type,
+  //             description, status, admin_comment, user_comment, document,
+  //             created_at, updated_at }]
+  listAll: (params) => http.get('/requests/admin/', { params }),
+
+  // POST /api/requests/{id}/action/
+  // Body: { status: "in_process"|"completed"|"rejected", admin_comment? }
+  // Returns: { message: "Request completed." }
+  takeAction: (id, d) => http.post(`/requests/${id}/action/`, d),
+
+  // GET /api/requests/{id}/document/  (admin view)
+  // Returns: { document: "<cloudinary_url>" } or { document: null, message }
+  getDocument: (id) => http.get(`/requests/${id}/document/`),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ADMIN API
 // ─────────────────────────────────────────────────────────────────────────────
 export const adminAPI = {

@@ -4,8 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default: light theme always applied to html element */
+html {
+  color-scheme: light;
+}
+
 :root,
-[data-theme="light"] {
+[data-theme="light"],
+html:not([data-theme="dark"]) {
   --brand-400: #3b61f5;
   --brand-500: #2545e8;
   --brand-600: #1d37cc;
@@ -85,6 +91,16 @@
   --bill-date: rgba(15,20,36,0.4);
   --progress-track: rgba(59,97,245,0.08);
   --shimmer-bg: rgba(59,97,245,0.06);
+
+  /* Request status badge backgrounds — contrast-safe for light mode */
+  --status-raised-bg:     rgba(245,158,11,0.12);
+  --status-raised-color:  #d97706;
+  --status-inprocess-bg:  rgba(59,97,245,0.12);
+  --status-inprocess-color: #3b61f5;
+  --status-completed-bg:  rgba(16,185,129,0.12);
+  --status-completed-color: #059669;
+  --status-rejected-bg:   rgba(239,68,68,0.12);
+  --status-rejected-color: #dc2626;
 }
 
 [data-theme="dark"] {
@@ -152,6 +168,16 @@
   --bill-date: rgba(240,244,255,0.35);
   --progress-track: rgba(255,255,255,0.06);
   --shimmer-bg: rgba(255,255,255,0.04);
+
+  /* Request status badge backgrounds */
+  --status-raised-bg:     rgba(245,158,11,0.14);
+  --status-raised-color:  #fbbf24;
+  --status-inprocess-bg:  rgba(59,97,245,0.14);
+  --status-inprocess-color: #818cf8;
+  --status-completed-bg:  rgba(16,185,129,0.14);
+  --status-completed-color: #34d399;
+  --status-rejected-bg:   rgba(239,68,68,0.14);
+  --status-rejected-color: #f87171;
 }
 
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0 }

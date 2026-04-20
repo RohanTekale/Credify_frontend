@@ -8,8 +8,10 @@ import {
   AlertTriangle, ChevronRight, ArrowUpRight, ArrowDownLeft,
   Zap, Sparkles, Gift, Activity, Search, Settings,
   MoreHorizontal, ArrowRight, Globe, Star,
+  FileText, MessageSquare, Filter, RotateCcw, Paperclip, Send,
+  Clock, AlertCircle, CheckCheck,
 } from 'lucide-react';
-import { cardAPI, transactionAPI, userAPI } from '../../services/api';
+import { cardAPI, transactionAPI, userAPI, requestsAPI } from '../../services/api';
 import {
   Spinner, Badge, Modal, Confirm, PageHeader,
   DataTable, TR, TD, EmptyState, Field, Button, Select,
@@ -71,7 +73,7 @@ const Spark = ({ data, color, h = 32 }) => {
 };
 
 // ── 3D Virtual Card ───────────────────────────────────────────────────────────
-const VirtualCard3D = ({ card, revealed, onToggleReveal }) => {
+const VirtualCard3D = ({ card, revealed, onToggleReveal, user }) => {
   const cardRef = useRef(null);
   const [rot, setRot] = useState({ x: 4, y: -3 });
   const [shine, setShine] = useState({ x: 50, y: 50 });
@@ -150,7 +152,14 @@ const VirtualCard3D = ({ card, revealed, onToggleReveal }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div>
               <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>Card Holder</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', fontFamily: 'Sora,sans-serif' }}>{card?.cardholder_name || 'CARDHOLDER'}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', fontFamily: 'Sora,sans-serif' }}>
+                {card?.cardholder_name ||
+                  (user?.first_name || user?.last_name
+                    ? `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim()
+                    : user?.name || user?.username || 'CARDHOLDER'
+                  )
+                }
+              </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>CVV</div>
@@ -231,6 +240,7 @@ const NAV = [
   { id: 'cards',         icon: CreditCard,      label: 'My Cards'       },
   { id: 'transactions',  icon: TrendingUp,      label: 'Transactions'   },
   { id: 'kyc',           icon: Shield,          label: 'KYC & Security' },
+  { id: 'requests',      icon: FileText,        label: 'Raise Request'  },
   { id: 'profile',       icon: User,            label: 'Profile'        },
   { id: 'notifications', icon: Bell,            label: 'Notifications'  },
 ];
@@ -250,7 +260,7 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
       position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
     }}>
       {/* Logo */}
-      <div style={{ padding: '22px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ padding: '22px 20px 20px', borderBottom: '1px solid var(--dash-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#3b61f5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(59,97,245,0.4)' }}>
             <CreditCard size={15} color="#fff" />
@@ -299,9 +309,9 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--dash-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</div>
             <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
           </div>
-          <button onClick={onLogout} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,244,255,0.3)', padding: 4, borderRadius: 7, transition: 'all 0.15s', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(240,244,255,0.3)'; e.currentTarget.style.background = 'none'; }}
+          <button onClick={onLogout} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--dash-text-muted)', padding: 4, borderRadius: 7, transition: 'all 0.15s', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--dash-text-muted)'; e.currentTarget.style.background = 'none'; }}
           >
             <LogOut size={15} />
           </button>
@@ -409,8 +419,8 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
             </div>
 
             {featuredCard
-              ? <VirtualCard3D card={featuredCard} revealed={revealed} onToggleReveal={() => setRevealed(r => !r)} />
-              : <div style={{ aspectRatio: '1.586', borderRadius: 18, background: 'linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))', border: '2px dashed rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10, color: 'rgba(240,244,255,0.3)' }}>
+              ? <VirtualCard3D card={featuredCard} revealed={revealed} onToggleReveal={() => setRevealed(r => !r)} user={user} />
+              : <div style={{ aspectRatio: '1.586', borderRadius: 18, background: 'var(--dash-card-bg)', border: '2px dashed var(--dash-card-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10, color: 'var(--dash-text-muted)' }}>
                   <CreditCard size={28} />
                   <div style={{ fontSize: 13, fontWeight: 600 }}>No card yet</div>
                   <div style={{ fontSize: 11, textAlign: 'center', maxWidth: 180, lineHeight: 1.5 }}>Request your first virtual card to get started</div>
@@ -520,9 +530,9 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
                 <div>
                   <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(167,139,250,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Rewards Balance</div>
                   <div style={{ fontSize: '1.7rem', fontWeight: 800, fontFamily: 'Sora,sans-serif', letterSpacing: '-0.03em', color: 'var(--rewards-title)', lineHeight: 1 }}>
-                    4,820 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>pts</span>
+                    4,820 <span style={{ fontSize: 12, color: 'var(--dash-text-muted)', fontWeight: 400 }}>pts</span>
                   </div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>≈ ₹482 cashback value</div>
+                  <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', marginTop: 4 }}>≈ ₹482 cashback value</div>
                 </div>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Sparkles size={15} color="#c4b5fd" />
@@ -530,10 +540,10 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
               </div>
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Next tier: 6,000 pts</span>
+                  <span style={{ fontSize: 9, color: 'var(--dash-text-muted)' }}>Next tier: 6,000 pts</span>
                   <span style={{ fontSize: 9, color: '#a78bfa', fontWeight: 700 }}>80%</span>
                 </div>
-                <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.08)' }}>
+                <div style={{ height: 4, borderRadius: 99, background: 'var(--progress-track)' }}>
                   <div style={{ height: '100%', width: '80%', borderRadius: 99, background: 'linear-gradient(90deg,#7c3aed,#ec4899)', boxShadow: '0 0 12px rgba(124,58,237,0.5)' }} />
                 </div>
               </div>
@@ -586,7 +596,7 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
 };
 
 // ── Cards Tab ─────────────────────────────────────────────────────────────────
-const CardsTab = ({ cards, onRefresh, loading }) => {
+const CardsTab = ({ cards, onRefresh, loading, user }) => {
   const toast = useToast();
   const [revealed, setRevealed] = useState({});
   const [actLoad, setActLoad] = useState({});
@@ -625,10 +635,10 @@ const CardsTab = ({ cards, onRefresh, loading }) => {
           ? <EmptyState icon={CreditCard} title="No cards yet" desc="Request your first virtual card to get started." action={{ label: 'Request Card', fn: () => setCreate(true) }} />
           : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 20 }}>
             {cards.map(card => (
-              <div key={card.id} style={{ padding: 20, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
-                <VirtualCard3D card={card} revealed={!!revealed[card.id]} onToggleReveal={() => setRevealed(s => ({ ...s, [card.id]: !s[card.id] }))} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(240,244,255,0.45)', marginBottom: 10, marginTop: 14 }}>
-                  <span>Limit: <strong style={{ color: '#f0f4ff' }}>₹{Number(card.credit_limit || 0).toLocaleString()}</strong></span>
+              <div key={card.id} style={{ padding: 20, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
+                <VirtualCard3D card={card} revealed={!!revealed[card.id]} onToggleReveal={() => setRevealed(s => ({ ...s, [card.id]: !s[card.id] }))} user={user} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--dash-text-muted)', marginBottom: 10, marginTop: 14 }}>
+                  <span>Limit: <strong style={{ color: 'var(--dash-text-primary)' }}>₹{Number(card.credit_limit || 0).toLocaleString()}</strong></span>
                   <span>Available: <strong style={{ color: '#10b981' }}>₹{Number(card.available_credit || 0).toLocaleString()}</strong></span>
                 </div>
                 <ProgressBar pct={Math.min(100, (((card.credit_limit - card.available_credit) / card.credit_limit) * 100) || 0)} color="linear-gradient(90deg,#3b61f5,#8b5cf6)" height={4} />
@@ -654,7 +664,7 @@ const CardsTab = ({ cards, onRefresh, loading }) => {
           <Field label="Monthly Income (₹)" type="number" placeholder="50000" value={form.income} onChange={e => setForm(f => ({ ...f, income: e.target.value }))} required />
           <Field label="Occupation" placeholder="Software Engineer" value={form.occupation} onChange={e => setForm(f => ({ ...f, occupation: e.target.value }))} required />
           <Field label="Intended Use" placeholder="Shopping, Travel…" value={form.intended_use} onChange={e => setForm(f => ({ ...f, intended_use: e.target.value }))} required />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: 'rgba(240,244,255,0.55)', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: 'var(--dash-text-secondary)', cursor: 'pointer' }}>
             <input type="checkbox" checked={form.is_single_use} onChange={e => setForm(f => ({ ...f, is_single_use: e.target.checked }))} />
             Single-use card
           </label>
@@ -704,7 +714,7 @@ const TransactionsTab = ({ cards, transactions, loading, onRefresh }) => {
               <TD mono muted style={{ fontSize: 12 }}>•••• {t.card_number?.slice(-4) || '****'}</TD>
               <TD muted style={{ fontSize: 11 }}>{t.created_at ? new Date(t.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</TD>
               <TD><Badge status={t.status || 'success'} /></TD>
-              <TD right style={{ fontFamily: 'JetBrains Mono,monospace', fontWeight: 700, color: parseFloat(t.amount) >= 0 ? '#34d399' : '#f0f4ff' }}>
+              <TD right style={{ fontFamily: 'JetBrains Mono,monospace', fontWeight: 700, color: parseFloat(t.amount) >= 0 ? '#10b981' : 'var(--dash-text-primary)' }}>
                 ₹{Math.abs(parseFloat(t.amount || 0)).toFixed(2)}
               </TD>
             </TR>
@@ -746,38 +756,38 @@ const KYCTab = ({ user }) => {
   return (
     <div style={{ maxWidth: 520 }}>
       <PageHeader title="KYC & Security" subtitle="Verify your identity to unlock all features" />
-      <div style={{ padding: 20, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 16 }}>
+      <div style={{ padding: 20, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: 12, color: 'rgba(240,244,255,0.4)', marginBottom: 8 }}>KYC Status</div>
+            <div style={{ fontSize: 12, color: 'var(--dash-text-muted)', marginBottom: 8 }}>KYC Status</div>
             <Badge status={kycStatus} label={kycStatus.charAt(0).toUpperCase() + kycStatus.slice(1)} size="md" />
           </div>
-          <Shield size={28} color={kycStatus === 'verified' ? '#10b981' : 'rgba(240,244,255,0.2)'} />
+          <Shield size={28} color={kycStatus === 'verified' ? '#10b981' : 'var(--dash-text-muted)'} />
         </div>
-        <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.45)', marginTop: 14, marginBottom: 0, lineHeight: 1.65 }}>
+        <p style={{ fontSize: 13, color: 'var(--dash-text-secondary)', marginTop: 14, marginBottom: 0, lineHeight: 1.65 }}>
           {kycStatus === 'verified' ? 'Your identity is verified. All features are unlocked.' : 'Upload a government-issued ID (Aadhaar, PAN, Passport) to verify.'}
         </p>
       </div>
       {status === 'success'
         ? <div style={{ textAlign: 'center', padding: 40, borderRadius: 20, background: 'linear-gradient(135deg,rgba(16,185,129,0.07),rgba(16,185,129,0.02))', border: '1px solid rgba(16,185,129,0.15)' }}>
           <CheckCircle2 size={48} color="#10b981" style={{ marginBottom: 14 }} />
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4ff', fontFamily: 'Sora,sans-serif', marginBottom: 8 }}>Document Submitted</div>
-          <div style={{ fontSize: 13, color: 'rgba(240,244,255,0.45)' }}>We'll review it within 24 hours and notify you.</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--dash-text-primary)', fontFamily: 'Sora,sans-serif', marginBottom: 8 }}>Document Submitted</div>
+          <div style={{ fontSize: 13, color: 'var(--dash-text-secondary)' }}>We'll review it within 24 hours and notify you.</div>
         </div>
-        : <div style={{ padding: 20, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        : <div style={{ padding: 20, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
           <div
             onDragOver={e => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
             onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
             onClick={() => ref.current?.click()}
-            style={{ border: `2px dashed ${drag ? '#3b61f5' : file ? '#10b981' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '36px 20px', textAlign: 'center', cursor: 'pointer', background: drag ? 'rgba(59,97,245,0.06)' : file ? 'rgba(16,185,129,0.04)' : 'transparent', transition: 'all 200ms', marginBottom: 16 }}
+            style={{ border: `2px dashed ${drag ? '#3b61f5' : file ? '#10b981' : 'var(--border)'}`, borderRadius: 14, padding: '36px 20px', textAlign: 'center', cursor: 'pointer', background: drag ? 'rgba(59,97,245,0.06)' : file ? 'rgba(16,185,129,0.04)' : 'transparent', transition: 'all 200ms', marginBottom: 16 }}
           >
             <input ref={ref} type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
             {file
-              ? <><CheckCircle2 size={28} color="#10b981" style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: '#f0f4ff' }}>{file.name}</div><div style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>{(file.size / 1024).toFixed(0)} KB</div></>
-              : <><Upload size={26} color="rgba(240,244,255,0.25)" style={{ marginBottom: 10 }} /><div style={{ fontSize: 13, fontWeight: 600, color: '#f0f4ff', marginBottom: 4 }}>Drop document here or click to browse</div><div style={{ fontSize: 11, color: 'rgba(240,244,255,0.35)' }}>JPG, PNG, PDF · Max 10MB</div></>
+              ? <><CheckCircle2 size={28} color="#10b981" style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dash-text-primary)' }}>{file.name}</div><div style={{ fontSize: 11, color: 'var(--dash-text-muted)' }}>{(file.size / 1024).toFixed(0)} KB</div></>
+              : <><Upload size={26} color="var(--dash-text-muted)" style={{ marginBottom: 10 }} /><div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dash-text-primary)', marginBottom: 4 }}>Drop document here or click to browse</div><div style={{ fontSize: 11, color: 'var(--dash-text-muted)' }}>JPG, PNG, PDF · Max 10MB</div></>
             }
           </div>
-          {status === 'error' && <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, color: '#f87171', fontSize: 13, marginBottom: 12 }}><AlertTriangle size={14} /> Upload failed. Please try again.</div>}
+          {status === 'error' && <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, color: '#dc2626', fontSize: 13, marginBottom: 12 }}><AlertTriangle size={14} /> Upload failed. Please try again.</div>}
           <Button fullWidth disabled={!file || status === 'uploading'} loading={status === 'uploading'} onClick={upload}><Upload size={14} /> Submit Document</Button>
         </div>
       }
@@ -803,22 +813,22 @@ const ProfileTab = ({ user, onUpdate }) => {
   return (
     <div style={{ maxWidth: 480 }}>
       <PageHeader title="Profile" subtitle="Manage your account details" />
-      <div style={{ padding: 22, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: 22, borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', boxShadow: 'var(--dash-card-shadow)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid var(--dash-border)' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg,${avatarColor},${avatarColor}aa)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', fontFamily: 'Sora,sans-serif', flexShrink: 0, boxShadow: `0 6px 20px ${avatarColor}50` }}>
             {(user?.username || 'U').slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: '#f0f4ff', fontFamily: 'Sora,sans-serif' }}>{user?.username}</div>
-            <div style={{ color: 'rgba(240,244,255,0.45)', fontSize: 13, marginTop: 2 }}>{user?.email}</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--dash-text-primary)', fontFamily: 'Sora,sans-serif' }}>{user?.username}</div>
+            <div style={{ color: 'var(--dash-text-secondary)', fontSize: 13, marginTop: 2 }}>{user?.email}</div>
             <Badge status={user?.kyc_status || 'unverified'} style={{ marginTop: 6 }} />
           </div>
         </div>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Field label="Phone Number" type="tel" placeholder="+91 98765 43210" value={form.phone_number} onChange={e => setForm(f => ({ ...f, phone_number: e.target.value }))} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,244,255,0.4)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Address</label>
-            <textarea rows={3} placeholder="Your address…" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 13px', color: '#f0f4ff', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'DM Sans,sans-serif', lineHeight: 1.6 }} />
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Address</label>
+            <textarea rows={3} placeholder="Your address…" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'DM Sans,sans-serif', lineHeight: 1.6 }} />
           </div>
           <Button type="submit" loading={saving} fullWidth>Save Changes</Button>
         </form>
@@ -841,19 +851,497 @@ const NotificationsTab = () => {
       <PageHeader title="Notifications" subtitle="Your latest alerts and updates" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {NOTIFS.map(({ icon, title, desc, color, time }, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 14, background: 'linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.08)', transition: 'all 200ms', cursor: 'pointer' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = `${color}25`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 14, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', transition: 'all 200ms', cursor: 'pointer' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}35`; e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--dash-card-border)'; e.currentTarget.style.background = 'var(--dash-card-bg)'; }}
           >
             <div style={{ width: 42, height: 42, borderRadius: 12, background: `${color}12`, border: `1px solid ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#f0f4ff', marginBottom: 2 }}>{title}</div>
-              <div style={{ fontSize: 12, color: 'rgba(240,244,255,0.45)' }}>{desc}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dash-text-primary)', marginBottom: 2 }}>{title}</div>
+              <div style={{ fontSize: 12, color: 'var(--dash-text-secondary)' }}>{desc}</div>
             </div>
-            <span style={{ fontSize: 11, color: 'rgba(240,244,255,0.3)', flexShrink: 0 }}>{time}</span>
+            <span style={{ fontSize: 11, color: 'var(--dash-text-muted)', flexShrink: 0 }}>{time}</span>
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+// ── Raise Request Tab ─────────────────────────────────────────────────────────
+// All request_type keys and labels match backend REQUEST_TYPES exactly
+const REQUEST_CATEGORIES = [
+  {
+    label: '💳 Card',
+    types: [
+      { key: 'credit_limit_increase',   label: 'Credit Limit Increase'      },
+      { key: 'credit_limit_decrease',   label: 'Credit Limit Decrease'      },
+      { key: 'card_upgrade',            label: 'Card Upgrade'               },
+      { key: 'card_downgrade',          label: 'Card Downgrade'             },
+      { key: 'card_replacement',        label: 'Card Replacement'           },
+      { key: 'card_cancellation',       label: 'Card Cancellation'          },
+      { key: 'single_use_card_request', label: 'Single-Use Card Request'    },
+      { key: 'card_unfreeze',           label: 'Card Unfreeze Request'      },
+    ],
+  },
+  {
+    label: '💸 Transaction',
+    types: [
+      { key: 'transaction_dispute',        label: 'Transaction Dispute'         },
+      { key: 'refund_request',             label: 'Refund Request'              },
+      { key: 'transaction_clarification',  label: 'Transaction Clarification'   },
+      { key: 'failed_transaction',         label: 'Failed Transaction Report'   },
+    ],
+  },
+  {
+    label: '👤 Account',
+    types: [
+      { key: 'kyc_re_submission',      label: 'KYC Re-submission Request' },
+      { key: 'account_reactivation',   label: 'Account Reactivation'      },
+      { key: 'profile_update_request', label: 'Profile Update Request'    },
+      { key: 'account_closure',        label: 'Account Closure'           },
+    ],
+  },
+  {
+    label: '🧾 Billing',
+    types: [
+      { key: 'subscription_cancellation', label: 'Subscription Cancellation' },
+      { key: 'subscription_upgrade',      label: 'Subscription Upgrade'      },
+      { key: 'billing_dispute',           label: 'Billing Dispute'           },
+      { key: 'fee_waiver',               label: 'Fee Waiver Request'        },
+    ],
+  },
+  {
+    label: '🔐 Security',
+    types: [
+      { key: 'suspected_fraud', label: 'Suspected Fraud Report'  },
+      { key: 'pin_reset',       label: 'PIN / Security Reset'    },
+    ],
+  },
+];
+
+// Backend status values use underscore: raised | in_process | completed | rejected
+const STATUS_CONFIG = {
+  raised:     { color: '#d97706', bg: 'rgba(245,158,11,0.12)',  icon: Clock,        label: 'Raised'     },
+  in_process: { color: '#3b61f5', bg: 'rgba(59,97,245,0.12)',   icon: Activity,     label: 'In Process' },
+  completed:  { color: '#059669', bg: 'rgba(16,185,129,0.12)',  icon: CheckCheck,   label: 'Completed'  },
+  rejected:   { color: '#dc2626', bg: 'rgba(239,68,68,0.12)',   icon: XCircle,      label: 'Rejected'   },
+};
+
+const RequestStatusBadge = ({ status }) => {
+  const cfg = STATUS_CONFIG[status?.toLowerCase()] || STATUS_CONFIG.raised;
+  const Icon = cfg.icon;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: cfg.color, background: cfg.bg }}>
+      <Icon size={10} /> {cfg.label}
+    </span>
+  );
+};
+
+// Helper: extract numeric ID from "REQ-12" → "12"
+const parseReqId = (req) => {
+  if (!req) return null;
+  const rid = req.request_id || req.id || '';
+  return String(rid).replace(/^REQ-/i, '');
+};
+
+const RaiseRequestTab = () => {
+  const toast = useToast();
+  const [requests, setRequests]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [filter, setFilter]       = useState('all');
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedReq, setSelectedReq] = useState(null);
+  const [detailModal, setDetailModal] = useState(false);
+  const [submitting, setSubmitting]   = useState(false);
+  const [commenting, setCommenting]   = useState(false);
+  const [uploading, setUploading]     = useState(false);
+  const [reraising, setReraising]     = useState(false);
+  const [userComment, setUserComment] = useState('');
+  const [reraiseDesc, setReraiseDesc] = useState('');
+  const [reraiseModal, setReraiseModal] = useState(false);
+  const [docFile, setDocFile]         = useState(null);
+  const docRef = React.useRef();
+
+  const [form, setForm] = useState({
+    request_type: '',   // backend enum key e.g. "credit_limit_increase"
+    is_other: false,
+    description: '',
+  });
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await requestsAPI.getMyRequests();
+      // Backend returns plain array per the curl reference
+      setRequests(Array.isArray(data) ? data : []);
+    } catch {
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  // status values from backend: raised | in_process | completed | rejected
+  const filtered = filter === 'all'
+    ? requests
+    : requests.filter(r => r.status === filter);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.request_type && !form.is_other) {
+      toast.error('Please select a request type.'); return;
+    }
+    setSubmitting(true);
+    const payload = {
+      request_type: form.is_other ? 'other' : form.request_type,
+      description:  form.description,
+    };
+    try {
+      const { data } = await requestsAPI.raise(payload);
+      toast.success(`Request submitted! ID: ${data.request_id}`);
+      setShowCreate(false);
+      setForm({ request_type: '', is_other: false, description: '' });
+      fetchRequests();
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleComment = async () => {
+    if (!userComment.trim()) return;
+    setCommenting(true);
+    try {
+      // POST /api/requests/{id}/comment/  body: { user_comment }
+      await requestsAPI.addComment(parseReqId(selectedReq), { user_comment: userComment });
+      toast.success('Comment added!');
+      setUserComment('');
+      fetchRequests();
+      setDetailModal(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setCommenting(false);
+    }
+  };
+
+  const handleDocUpload = async () => {
+    if (!docFile) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('document', docFile);  // field name per curl: "document"
+    try {
+      const { data } = await requestsAPI.uploadDoc(parseReqId(selectedReq), fd);
+      toast.success('Document uploaded!');
+      if (data?.url) window.open(data.url, '_blank');
+      setDocFile(null);
+      fetchRequests();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleReraise = async () => {
+    setReraising(true);
+    try {
+      // POST /api/requests/{id}/reraise/  body: { description? }
+      const { data } = await requestsAPI.reraise(parseReqId(selectedReq), reraiseDesc ? { description: reraiseDesc } : {});
+      toast.success(`Request re-raised! New ID: ${data.request_id}`);
+      setReraiseModal(false);
+      setReraiseDesc('');
+      setDetailModal(false);
+      fetchRequests();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setReraising(false);
+    }
+  };
+
+  const openDetail = (req) => { setSelectedReq(req); setDetailModal(true); setUserComment(''); setDocFile(null); };
+
+  const FILTERS = [
+    { id: 'all',        label: 'All'        },
+    { id: 'raised',     label: 'Raised'     },
+    { id: 'in_process', label: 'In Process' },
+    { id: 'completed',  label: 'Completed'  },
+    { id: 'rejected',   label: 'Rejected'   },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="Raise Request"
+        subtitle="Submit and track your support requests"
+        actions={<Button onClick={() => setShowCreate(true)}><Plus size={14} /> New Request</Button>}
+      />
+
+      {/* Filter tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: 'var(--bg-subtle)', borderRadius: 12, width: 'fit-content', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        {FILTERS.map(({ id, label }) => {
+          const count = id === 'all' ? requests.length : requests.filter(r => r.status === id).length;
+          return (
+            <button key={id} onClick={() => setFilter(id)} style={{
+              padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+              background: filter === id ? 'var(--dash-card-bg)' : 'transparent',
+              color: filter === id ? '#3b61f5' : 'var(--dash-text-secondary)',
+              fontFamily: 'DM Sans,sans-serif', fontSize: 12, fontWeight: 700,
+              boxShadow: filter === id ? '0 0 0 1px rgba(59,97,245,0.2)' : 'none',
+              transition: 'all 0.15s',
+            }}>
+              {label}{count > 0 ? <span style={{ marginLeft: 5, background: filter === id ? '#3b61f5' : 'var(--bg-muted)', color: filter === id ? '#fff' : 'var(--dash-text-muted)', borderRadius: 10, padding: '0 5px', fontSize: 10 }}>{count}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 48 }}><Spinner size={24} /></div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 20px', borderRadius: 20, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)' }}>
+          <FileText size={40} color="var(--dash-text-muted)" style={{ marginBottom: 14 }} />
+          <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--dash-text-primary)', marginBottom: 6, fontFamily: 'Sora,sans-serif' }}>No requests yet</div>
+          <div style={{ color: 'var(--dash-text-secondary)', fontSize: 13, marginBottom: 20 }}>Submit a support request and we'll get back to you.</div>
+          <Button onClick={() => setShowCreate(true)}><Plus size={14} /> Raise First Request</Button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.map((req) => (
+            <div key={req.request_id || req.id}
+              onClick={() => openDetail(req)}
+              style={{ padding: '16px 20px', borderRadius: 16, background: 'var(--dash-card-bg)', border: '1px solid var(--dash-card-border)', cursor: 'pointer', transition: 'all 200ms' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,97,245,0.25)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(59,97,245,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--dash-card-border)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--dash-text-muted)', background: 'var(--bg-subtle)', padding: '2px 8px', borderRadius: 6 }}>
+                      {req.request_id || `#${req.id}`}
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dash-text-primary)' }}>
+                      {/* Show human-readable label if we know the type */}
+                      {REQUEST_CATEGORIES.flatMap(c => c.types).find(t => t.key === req.request_type)?.label
+                        || req.request_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                        || 'General Request'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--dash-text-secondary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 480 }}>
+                    {req.description || 'No description provided'}
+                  </p>
+                  {req.admin_comment && (
+                    <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 8, background: 'rgba(59,97,245,0.06)', border: '1px solid rgba(59,97,245,0.12)', fontSize: 11, color: 'var(--dash-text-secondary)' }}>
+                      <span style={{ fontWeight: 700, color: '#3b61f5' }}>Admin: </span>{req.admin_comment}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+                  <RequestStatusBadge status={req.status || 'raised'} />
+                  <span style={{ fontSize: 10, color: 'var(--dash-text-muted)' }}>
+                    {req.created_at ? new Date(req.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Just now'}
+                  </span>
+                  {req.status === 'rejected' && (
+                    <button onClick={e => { e.stopPropagation(); setSelectedReq(req); setReraiseModal(true); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', color: '#d97706', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                      <RotateCcw size={10} /> Re-raise
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Create Request Modal ── */}
+      <Modal open={showCreate} onClose={() => { setShowCreate(false); setForm({ request_type: '', is_other: false, description: '' }); }} title="Raise New Request" width={520}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10 }}>Select Request Type</label>
+            {REQUEST_CATEGORIES.map(cat => (
+              <div key={cat.label} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', marginBottom: 6, letterSpacing: '0.04em' }}>{cat.label}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {cat.types.map(type => {
+                    const isActive = form.request_type === type.key && !form.is_other;
+                    return (
+                      <button type="button" key={type.key}
+                        onClick={() => setForm(f => ({ ...f, request_type: type.key, is_other: false }))}
+                        style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${isActive ? '#3b61f5' : 'var(--border)'}`, background: isActive ? 'rgba(59,97,245,0.1)' : 'var(--bg-card)', color: isActive ? '#3b61f5' : 'var(--dash-text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', transition: 'all 150ms' }}>
+                        {type.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {/* Other */}
+            <div style={{ marginTop: 4 }}>
+              <button type="button"
+                onClick={() => setForm(f => ({ ...f, is_other: true, request_type: '' }))}
+                style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${form.is_other ? '#3b61f5' : 'var(--border)'}`, background: form.is_other ? 'rgba(59,97,245,0.1)' : 'var(--bg-card)', color: form.is_other ? '#3b61f5' : 'var(--dash-text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif' }}>
+                ✦ Other (specify in description)
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 6 }}>
+              Description{form.is_other ? ' (required)' : ''}
+            </label>
+            <textarea
+              rows={4}
+              placeholder={form.is_other ? 'Describe your request in detail — required for Other type...' : 'Describe your issue in detail...'}
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              required={form.is_other}
+              style={{ width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', color: 'var(--dash-text-primary)', fontSize: 13, fontFamily: 'DM Sans,sans-serif', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: 1.6 }}
+            />
+          </div>
+
+          <Button type="submit" loading={submitting} fullWidth disabled={(!form.request_type && !form.is_other) || submitting}>
+            <Send size={13} /> Submit Request
+          </Button>
+        </form>
+      </Modal>
+
+      {/* ── Detail Modal ── */}
+      <Modal open={detailModal} onClose={() => { setDetailModal(false); setSelectedReq(null); }} title={selectedReq?.request_id || `Request Detail`} width={560}>
+        {selectedReq && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Info grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[
+                { label: 'Request ID',   value: selectedReq.request_id || selectedReq.id },
+                { label: 'Status',       value: <RequestStatusBadge status={selectedReq.status || 'raised'} /> },
+                { label: 'Type',         value: REQUEST_CATEGORIES.flatMap(c => c.types).find(t => t.key === selectedReq.request_type)?.label || selectedReq.request_type?.replace(/_/g, ' ') || '—' },
+                { label: 'Date Raised',  value: selectedReq.created_at ? new Date(selectedReq.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dash-text-primary)' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Description */}
+            <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Your Description</div>
+              <p style={{ fontSize: 13, color: 'var(--dash-text-secondary)', margin: 0, lineHeight: 1.7 }}>{selectedReq.description || 'No description.'}</p>
+            </div>
+
+            {/* Admin comment (read-only for user) */}
+            {selectedReq.admin_comment && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(59,97,245,0.05)', border: '1px solid rgba(59,97,245,0.15)' }}>
+                <div style={{ fontSize: 10, color: '#3b61f5', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6, fontWeight: 700 }}>💬 Admin Comment</div>
+                <p style={{ fontSize: 13, color: 'var(--dash-text-secondary)', margin: 0, lineHeight: 1.7 }}>{selectedReq.admin_comment}</p>
+              </div>
+            )}
+
+            {/* Existing user comment */}
+            {selectedReq.user_comment && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Your Comment</div>
+                <p style={{ fontSize: 13, color: 'var(--dash-text-secondary)', margin: 0, lineHeight: 1.7 }}>{selectedReq.user_comment}</p>
+              </div>
+            )}
+
+            {/* Uploaded doc */}
+            {selectedReq.document && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Paperclip size={14} color="var(--dash-text-muted)" />
+                <a href={selectedReq.document} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#3b61f5', fontWeight: 600, textDecoration: 'none' }}>
+                  View Uploaded Document →
+                </a>
+              </div>
+            )}
+
+            {/* Upload document */}
+            <div style={{ padding: '14px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px dashed var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+                {selectedReq.document ? 'Replace Document' : 'Upload Supporting Document'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--dash-text-muted)', marginBottom: 10 }}>PDF, JPG, JPEG, PNG — max 5MB</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input ref={docRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={e => setDocFile(e.target.files[0])} />
+                <button onClick={() => docRef.current?.click()} style={{ flex: 1, padding: '9px', borderRadius: 9, background: 'var(--bg-card)', border: '1px solid var(--border)', color: docFile ? '#3b61f5' : 'var(--dash-text-secondary)', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                  <Paperclip size={13} /> {docFile ? docFile.name : 'Choose file…'}
+                </button>
+                {docFile && (
+                  <Button size="sm" onClick={handleDocUpload} loading={uploading}>
+                    <Upload size={12} /> Upload
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Add user comment */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+                {selectedReq.user_comment ? 'Update Your Comment' : 'Add Comment'}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  placeholder="Add a comment for the admin..."
+                  value={userComment}
+                  onChange={e => setUserComment(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleComment()}
+                  style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', color: 'var(--dash-text-primary)', fontSize: 13, fontFamily: 'DM Sans,sans-serif', outline: 'none' }}
+                />
+                <Button onClick={handleComment} loading={commenting} disabled={!userComment.trim()}>
+                  <Send size={13} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Re-raise banner for rejected */}
+            {selectedReq.status === 'rejected' && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--dash-text-secondary)', lineHeight: 1.5 }}>
+                  This request was rejected. You can re-raise it with updated information.
+                </div>
+                <Button variant="warning" size="sm" onClick={() => { setReraiseModal(true); setDetailModal(false); }} style={{ flexShrink: 0 }}>
+                  <RotateCcw size={12} /> Re-raise
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* ── Re-raise Modal ── */}
+      <Modal open={reraiseModal} onClose={() => { setReraiseModal(false); setReraiseDesc(''); }} title={`Re-raise ${selectedReq?.request_id || 'Request'}`} width={440}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ fontSize: 13, color: 'var(--dash-text-secondary)', margin: 0, lineHeight: 1.6 }}>
+            Optionally provide an updated description with additional context or documents before re-raising.
+          </p>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--dash-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 6 }}>
+              Updated Description (optional)
+            </label>
+            <textarea
+              rows={4}
+              placeholder="Provide any additional context or upload new documents..."
+              value={reraiseDesc}
+              onChange={e => setReraiseDesc(e.target.value)}
+              style={{ width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', color: 'var(--dash-text-primary)', fontSize: 13, fontFamily: 'DM Sans,sans-serif', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: 1.6 }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button variant="ghost" onClick={() => { setReraiseModal(false); setReraiseDesc(''); }} style={{ flex: 1 }}>Cancel</Button>
+            <Button onClick={handleReraise} loading={reraising} style={{ flex: 1 }}>
+              <RotateCcw size={13} /> Re-raise Request
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -897,9 +1385,10 @@ export default function Dashboard() {
 
   const TABS = {
     overview:      <OverviewTab cards={cards} transactions={txns} loading={loadC || loadT} user={user} />,
-    cards:         <CardsTab cards={cards} loading={loadC} onRefresh={fetchCards} />,
+    cards:         <CardsTab cards={cards} loading={loadC} onRefresh={fetchCards} user={user} />,
     transactions:  <TransactionsTab cards={cards} transactions={txns} loading={loadT} onRefresh={refresh} />,
     kyc:           <KYCTab user={user} />,
+    requests:      <RaiseRequestTab />,
     profile:       <ProfileTab user={user} onUpdate={updateUser} />,
     notifications: <NotificationsTab />,
   };

@@ -29,6 +29,10 @@ import TableView    from './pages/dev/TableView';
 import QueryRunner  from './pages/dev/QueryRunner';
 import ApiDebugger  from './pages/dev/ApiDebugger';
 import AuditLogs    from './pages/dev/AuditLogs';
+import CeleryTasks  from './pages/dev/CeleryTasks';
+import SentryErrors from './pages/dev/SentryErrors';
+import MigrationStatus from './pages/dev/MigrationStatus';
+import ComingSoon   from './pages/dev/ComingSoon';
 
 import useAuthStore  from './store/authStore';
 import useThemeStore from './store/themeStore';
@@ -128,6 +132,14 @@ const AppInner = () => {
             <Route path="query"         element={<QueryRunner />} />
             <Route path="api"           element={<ApiDebugger />} />
             <Route path="logs"          element={<AuditLogs />} />
+            {/* Phase 1 */}
+            <Route path="tasks"         element={<CeleryTasks />} />
+            <Route path="sentry"        element={<SentryErrors />} />
+            <Route path="migrations"    element={<MigrationStatus />} />
+            {/* Phase 2 — coming soon */}
+            <Route path="redis"         element={<ComingSoon />} />
+            <Route path="config"        element={<ComingSoon />} />
+            <Route path="indexes"       element={<ComingSoon />} />
           </Route>
 
           {/* ── 404 ──────────────────────────────────────────────────── */}
