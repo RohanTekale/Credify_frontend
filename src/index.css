@@ -13,29 +13,6 @@ html {
   --auth-card-border:   rgba(59,97,245,0.15);
   --auth-card-shadow:   0 8px 40px rgba(59,97,245,0.1), 0 1px 0 rgba(255,255,255,0.8) inset;
   --bg-card:            #ffffff;
-
-  /* ── Dev Panel — light theme ─────────────────────────────────────────── */
-  --dev-bg:            #f4f6fb;
-  --dev-sidebar-bg:    rgba(255,255,255,0.96);
-  --dev-sidebar-border:rgba(59,97,245,0.1);
-  --dev-topbar-bg:     rgba(244,246,251,0.9);
-  --dev-topbar-border: rgba(59,97,245,0.08);
-  --dev-card-bg:       rgba(255,255,255,0.9);
-  --dev-card-border:   rgba(59,97,245,0.1);
-  --dev-grid:          rgba(59,97,245,0.04);
-  --dev-text-primary:  #0d1420;
-  --dev-text-secondary:#475569;
-  --dev-text-muted:    #94a3b8;
-  --dev-nav-link:      #64748b;
-  --dev-nav-active-bg: rgba(59,97,245,0.08);
-  --dev-nav-active-c:  #3b61f5;
-  --dev-status-bg:     rgba(16,185,129,0.05);
-  --dev-divider:       rgba(59,97,245,0.08);
-  --dev-mono-bg:       rgba(59,97,245,0.05);
-  --dev-row-hover:     rgba(59,97,245,0.03);
-  --dev-collapse-bg:   rgba(59,97,245,0.06);
-  --dev-collapse-border:rgba(59,97,245,0.15);
-
 }
 
 :root,
@@ -136,29 +113,6 @@ html:not([data-theme="dark"]) {
   --auth-card-border:   rgba(255,255,255,0.08);
   --auth-card-shadow:   0 32px 80px rgba(0,0,0,0.5);
   --bg-card:            rgba(255,255,255,0.04);
-
-  /* ── Dev Panel — dark theme ──────────────────────────────────────────── */
-  --dev-bg:            #080c14;
-  --dev-sidebar-bg:    rgba(8,12,20,0.97);
-  --dev-sidebar-border:rgba(255,255,255,0.07);
-  --dev-topbar-bg:     rgba(8,12,20,0.8);
-  --dev-topbar-border: rgba(255,255,255,0.07);
-  --dev-card-bg:       rgba(255,255,255,0.035);
-  --dev-card-border:   rgba(255,255,255,0.07);
-  --dev-grid:          rgba(59,97,245,0.04);
-  --dev-text-primary:  #f0f4ff;
-  --dev-text-secondary:#8b96b0;
-  --dev-text-muted:    #4b5675;
-  --dev-nav-link:      #8b96b0;
-  --dev-nav-active-bg: rgba(59,97,245,0.14);
-  --dev-nav-active-c:  #8ba7ff;
-  --dev-status-bg:     rgba(16,185,129,0.04);
-  --dev-divider:       rgba(255,255,255,0.07);
-  --dev-mono-bg:       rgba(255,255,255,0.04);
-  --dev-row-hover:     rgba(255,255,255,0.025);
-  --dev-collapse-bg:   transparent;
-  --dev-collapse-border:rgba(255,255,255,0.07);
-
 }
 
 [data-theme="dark"] {
