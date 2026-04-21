@@ -238,8 +238,8 @@ export default function DevDashboard() {
 }
 
 const C = {
-  bgCard:'rgba(255,255,255,0.032)', border:'rgba(255,255,255,0.07)',
-  brand:'#3b61f5', text:'#f0f4ff', textSec:'#8b96b0', textMuted:'#4b5675',
+  bgCard:'rgba(255,255,255,0.032)', border:'var(--dev-card-border)',
+  brand:'#3b61f5', text:'var(--dev-text-primary)', textSec:'var(--dev-text-secondary)', textMuted:'var(--dev-text-muted)',
 };
 
 const S = {
@@ -271,7 +271,7 @@ const S = {
   chartLabels:{ display:'flex', justifyContent:'space-between', marginTop:10 },
   chartLabel: { fontSize:10, color:C.textMuted, fontFamily:"'JetBrains Mono',monospace" },
   quickGrid:  { display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 },
-  quickBtn:   { display:'flex', alignItems:'center', gap:8, padding:'10px 12px', background:'rgba(255,255,255,0.03)', border:`1px solid ${C.border}`, borderRadius:10, textDecoration:'none', cursor:'pointer' },
+  quickBtn:   { display:'flex', alignItems:'center', gap:8, padding:'10px 12px', background:'var(--dev-card-bg)', border:`1px solid ${C.border}`, borderRadius:10, textDecoration:'none', cursor:'pointer' },
   quickIcon:  { display:'flex', alignItems:'center', flexShrink:0 },
   quickLabel: { fontSize:12, fontWeight:600, color:C.text, flex:1 },
   bottomRow:  { display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 },
@@ -280,11 +280,11 @@ const S = {
   tableRow:   { display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:9, textDecoration:'none', transition:'background 150ms', cursor:'pointer' },
   tableRank:  { fontSize:10, fontFamily:"'JetBrains Mono',monospace", fontWeight:700, minWidth:22, opacity:0.7 },
   tableName:  { flex:1, fontSize:12.5, fontWeight:600, color:C.text, fontFamily:"'JetBrains Mono',monospace" },
-  tableBadge: { fontSize:10, color:C.textMuted, background:'rgba(255,255,255,0.04)', padding:'2px 6px', borderRadius:4, fontFamily:"'JetBrains Mono',monospace" },
+  tableBadge: { fontSize:10, color:C.textMuted, background:'var(--dev-card-bg)', padding:'2px 6px', borderRadius:4, fontFamily:"'JetBrains Mono',monospace" },
   tableMeta:  { fontSize:11, color:C.textMuted, minWidth:60, textAlign:'right', fontFamily:"'JetBrains Mono',monospace" },
   actCard:    { background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:14, padding:'16px 20px', overflow:'hidden' },
   actList:    { display:'flex', flexDirection:'column', gap:2 },
-  actRow:     { display:'flex', alignItems:'center', gap:9, padding:'7px 8px', borderRadius:7, borderBottom:'1px solid rgba(255,255,255,0.04)' },
+  actRow:     { display:'flex', alignItems:'center', gap:9, padding:'7px 8px', borderRadius:7, borderBottom:'1px solid var(--dev-divider)' },
   actType:    { fontSize:9, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.07em', padding:'2px 7px', borderRadius:4, flexShrink:0, fontFamily:"'JetBrains Mono',monospace" },
   actMsg:     { flex:1, fontSize:11.5, color:C.textSec, fontFamily:"'JetBrains Mono',monospace", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' },
   actMeta:    { fontSize:10.5, color:C.textMuted, fontFamily:"'JetBrains Mono',monospace", maxWidth:80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flexShrink:0 },

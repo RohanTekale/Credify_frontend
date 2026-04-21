@@ -297,8 +297,8 @@ function getMockResult(sql) {
 }
 
 const C = {
-  bgCard: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSecondary: '#8b96b0', textMuted: '#4b5675',
+  bgCard: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSecondary: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
 };
 
 const S = {
@@ -306,7 +306,7 @@ const S = {
   header: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' },
   title: { margin: 0, fontSize: 22, fontWeight: 700, color: C.text, fontFamily: "'Sora',sans-serif", letterSpacing: '-0.02em' },
   subtitle: { margin: '4px 0 0', fontSize: 13, color: C.textSecondary },
-  kbd: { background: 'rgba(255,255,255,0.08)', border: `1px solid ${C.border}`, borderRadius: 4, padding: '1px 5px', fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: C.text },
+  kbd: { background: 'var(--dev-card-border)', border: `1px solid ${C.border}`, borderRadius: 4, padding: '1px 5px', fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: C.text },
   histBtn: { display: 'flex', alignItems: 'center', gap: 6, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 8, color: C.textSecondary, padding: '7px 12px', fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif" },
   body: { display: 'flex', gap: 14 },
   editorPane: { flex: 1, display: 'flex', flexDirection: 'column', gap: 10, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px', minWidth: 0 },
@@ -337,7 +337,7 @@ const S = {
   clearBtn: { background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer' },
   histEmpty: { fontSize: 12, color: C.textMuted, textAlign: 'center', marginTop: 20 },
   histList: { display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1 },
-  histItem: { padding: '8px 10px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 7, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3, transition: 'background 150ms' },
+  histItem: { padding: '8px 10px', background: 'var(--dev-card-bg)', border: `1px solid ${C.border}`, borderRadius: 7, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3, transition: 'background 150ms' },
   histTime: { fontSize: 10, color: C.textMuted, fontFamily: "'JetBrains Mono',monospace" },
   histSql: { fontSize: 11, color: C.textSecondary, fontFamily: "'JetBrains Mono',monospace", lineHeight: '1.4' },
   histRows: { fontSize: 10, color: C.brand },
@@ -351,14 +351,14 @@ const S = {
   resultsBox: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' },
   resultsHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.2)' },
   resultsMeta: { display: 'flex', gap: 8 },
-  metaBadge: { fontSize: 11, color: C.textSecondary, background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, padding: '2px 8px', borderRadius: 10, fontFamily: "'JetBrains Mono',monospace" },
+  metaBadge: { fontSize: 11, color: C.textSecondary, background: 'var(--dev-mono-bg)', border: `1px solid ${C.border}`, padding: '2px 8px', borderRadius: 10, fontFamily: "'JetBrains Mono',monospace" },
   exportBtn: { background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, color: C.textSecondary, padding: '4px 10px', fontSize: 12, cursor: 'pointer' },
   tableScroll: { overflowX: 'auto', maxHeight: 400 },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { padding: '8px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: C.textMuted, background: 'rgba(255,255,255,0.03)', borderBottom: `1px solid ${C.border}`, cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none' },
+  th: { padding: '8px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: C.textMuted, background: 'var(--dev-card-bg)', borderBottom: `1px solid ${C.border}`, cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none' },
   thInner: { display: 'flex', alignItems: 'center', gap: 4 },
   tr: {},
-  td: { padding: '7px 14px', fontSize: 12, borderBottom: `1px solid rgba(255,255,255,0.04)`, maxWidth: 200 },
+  td: { padding: '7px 14px', fontSize: 12, borderBottom: `1px solid var(--dev-divider)`, maxWidth: 200 },
   cellVal: { display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "'JetBrains Mono',monospace", color: C.text },
   jsonView: { background: 'rgba(0,0,0,0.4)', color: '#a8d8ff', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, padding: '16px', borderRadius: 12, border: `1px solid ${C.border}`, overflowX: 'auto', maxHeight: 400, margin: 0 },
 };

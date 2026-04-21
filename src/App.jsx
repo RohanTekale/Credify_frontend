@@ -32,7 +32,10 @@ import AuditLogs    from './pages/dev/AuditLogs';
 import CeleryTasks  from './pages/dev/CeleryTasks';
 import SentryErrors from './pages/dev/SentryErrors';
 import MigrationStatus from './pages/dev/MigrationStatus';
-import ComingSoon   from './pages/dev/ComingSoon';
+import ComingSoon      from './pages/dev/ComingSoon';
+import RedisInspector  from './pages/dev/RedisInspector';
+import EnvConfig       from './pages/dev/EnvConfig';
+import IndexHealth     from './pages/dev/IndexHealth';
 
 import useAuthStore  from './store/authStore';
 import useThemeStore from './store/themeStore';
@@ -137,9 +140,9 @@ const AppInner = () => {
             <Route path="sentry"        element={<SentryErrors />} />
             <Route path="migrations"    element={<MigrationStatus />} />
             {/* Phase 2 — coming soon */}
-            <Route path="redis"         element={<ComingSoon />} />
-            <Route path="config"        element={<ComingSoon />} />
-            <Route path="indexes"       element={<ComingSoon />} />
+            <Route path="redis"         element={<RedisInspector />} />
+            <Route path="config"        element={<EnvConfig />} />
+            <Route path="indexes"       element={<IndexHealth />} />
           </Route>
 
           {/* ── 404 ──────────────────────────────────────────────────── */}

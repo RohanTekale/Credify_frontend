@@ -1,3 +1,24 @@
+const CredifyNavLogo = () => (
+  <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="10" fill="url(#nav-logo-g)"/>
+    <path d="M20 7 L30 11 L30 21 Q30 29 20 33 Q10 29 10 21 L10 11 Z"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
+    <rect x="13" y="16" width="11" height="8" rx="1.5"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3"/>
+    <line x1="13" y1="19.5" x2="24" y2="19.5" stroke="rgba(255,255,255,0.9)" strokeWidth="1"/>
+    <path d="M17.5 16 L17.5 14.5 Q17.5 13 19 13 Q20.5 13 20.5 14.5 L20.5 16"
+      stroke="rgba(255,255,255,0.85)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    <path d="M26 14 L28 16.5 L32 12" stroke="#4ade80" strokeWidth="1.8"
+      fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    <defs>
+      <linearGradient id="nav-logo-g" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#3b61f5"/>
+        <stop offset="100%" stopColor="#1d37cc"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 // src/components/Navbar.jsx — Fixed: no duplicate theme toggle, single ThemeToggle
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';

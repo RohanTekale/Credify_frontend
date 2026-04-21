@@ -172,6 +172,11 @@ export const requestsAPI = {
   //             user_comment, document, created_at, updated_at }]
   getMyRequests: (params) => http.get('/requests/my/', { params }),
 
+  // GET /api/requests/{id}/detail/
+  // Returns full detail with public comments + status history
+  // Also marks is_viewed_by_user=true (clears unread badge)
+  getMyDetail: (id) => http.get(`/requests/${id}/detail/`),
+
   // POST /api/requests/{id}/comment/
   // Body: { user_comment }
   // Returns: { message: "Comment added." }
@@ -182,6 +187,11 @@ export const requestsAPI = {
   uploadDoc: (id, fd) => http.post(`/requests/${id}/document/`, fd, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
+  
+  // POST /api/requests/{id}/rate/
+  // Body: { user_rating: 1-5, user_feedback?: string }
+  // Only available when status='completed' and not yet rated
+  rate: (id, d) => http.post(`/requests/${id}/rate/`, d),
 
   // POST /api/requests/{id}/reraise/
   // Body: { description? }  — optional updated description
@@ -196,10 +206,26 @@ export const requestsAPI = {
   //             created_at, updated_at }]
   listAll: (params) => http.get('/requests/admin/', { params }),
 
+  // GET /api/requests/{id}/admin/detail/
+  // Returns full detail with ALL comments (including internal) + history
+  adminDetail: (id) => http.get(`/requests/${id}/admin/detail/`),
+
   // POST /api/requests/{id}/action/
   // Body: { status: "in_process"|"completed"|"rejected", admin_comment? }
   // Returns: { message: "Request completed." }
   takeAction: (id, d) => http.post(`/requests/${id}/action/`, d),
+
+  // POST /api/requests/{id}/admin/comment/
+  // Body: { body, is_internal: bool }
+  // is_internal=true → admin-only note, never shown to user
+  adminComment: (id, d) => http.post(`/requests/${id}/admin/comment/`, d),
+   // POST /api/requests/{id}/assign/
+  // Body: { assigned_to: <user_id of support agent> }
+  assign: (id, d) => http.post(`/requests/${id}/assign/`, d),
+ 
+  // DELETE /api/requests/{id}/archive/
+  // Soft-deletes — hides from all default queries, preserves in DB
+  archive: (id) => http.delete(`/requests/${id}/archive/`),
 
   // GET /api/requests/{id}/document/  (admin view)
   // Returns: { document: "<cloudinary_url>" } or { document: null, message }

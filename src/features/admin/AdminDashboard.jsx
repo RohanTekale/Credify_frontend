@@ -250,14 +250,34 @@ const NAV = [
   { id: '__dev__',   icon: Terminal,        label: 'Dev Panel', isLink: true, to: '/dev' },
 ];
 
+// ── Credify Logo SVG ─────────────────────────────────────────────────────────
+const AdminCredifyLogo = () => (
+  <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="10" fill="url(#admin-logo-grad)"/>
+    <path d="M20 7 L30 11 L30 21 Q30 29 20 33 Q10 29 10 21 L10 11 Z"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
+    <rect x="13" y="16" width="11" height="8" rx="1.5"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3"/>
+    <line x1="13" y1="19.5" x2="24" y2="19.5" stroke="rgba(255,255,255,0.9)" strokeWidth="1"/>
+    <path d="M17.5 16 L17.5 14.5 Q17.5 13 19 13 Q20.5 13 20.5 14.5 L20.5 16"
+      stroke="rgba(255,255,255,0.85)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    <path d="M26 14 L28 16.5 L32 12" stroke="#4ade80" strokeWidth="1.8"
+      fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    <defs>
+      <linearGradient id="admin-logo-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#3b61f5"/>
+        <stop offset="100%" stopColor="#7C3AED"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 const Sidebar = ({ active, setActive, onLogout,navigate }) => (
   <aside style={{ width: 230, flexShrink: 0, background: BG_CARD, borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', padding: '20px 12px', minHeight: '100vh' }}>
     {/* Logo */}
     <div style={{ padding: '4px 10px', marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${ACCENT}, #7C3AED)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Zap size={16} color="#fff"/>
-        </div>
+        <AdminCredifyLogo />
         <div>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 900, color: TEXT_1, letterSpacing: '-0.03em' }}>Credify</div>
           <div style={{ fontSize: 10, fontWeight: 700, color: DANGER, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Admin</div>
@@ -265,22 +285,14 @@ const Sidebar = ({ active, setActive, onLogout,navigate }) => (
       </div>
     </div>
 
-    {/* Admin badge */}
-    <div style={{ margin: '0 2px 20px', padding: '10px 12px', borderRadius: 12, background: 'rgba(255,77,79,0.06)', border: '1px solid rgba(255,77,79,0.15)' }}>
+    {/* Single animated Admin Access badge */}
+    <div style={{ margin: '0 2px 16px', padding: '10px 12px', borderRadius: 12, background: 'rgba(255,77,79,0.06)', border: '1px solid rgba(255,77,79,0.15)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 8, right: 10, width: 7, height: 7, borderRadius: '50%', background: DANGER, animation: 'adminPulse 2s ease-in-out infinite' }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <ShieldCheck size={13} color={DANGER}/>
         <span style={{ fontSize: 10, fontWeight: 800, color: DANGER, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Admin Access</span>
       </div>
       <div style={{ fontSize: 11, color: TEXT_3, marginTop: 3 }}>Full system control</div>
-    </div>
-
-    {/* ADMIN MODE chip — visible in sidebar only */}
-    <div style={{ margin: '0 10px 10px', padding: '7px 12px', borderRadius: 9, background: 'rgba(255,77,79,0.06)', border: '1px solid rgba(255,77,79,0.15)', display: 'flex', alignItems: 'center', gap: 7 }}>
-      <ShieldCheck size={12} color={DANGER}/>
-      <div>
-        <div style={{ fontSize: 10, fontWeight: 800, color: DANGER, letterSpacing: '0.07em' }}>ADMIN MODE</div>
-        <div style={{ fontSize: 10, color: TEXT_3, marginTop: 1 }}>Full system access</div>
-      </div>
     </div>
 
     <div style={{ fontSize: 10, fontWeight: 700, color: TEXT_3, letterSpacing: '0.1em', padding: '0 10px', marginBottom: 8, textTransform: 'uppercase' }}>Management</div>
@@ -805,313 +817,7 @@ const ReqStatusPill = ({ status }) => {
   );
 };
 
-const RequestsReceivedTab = ({ onRefresh }) => {
-  const [requests, setRequests]       = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState('all');
-  const [search, setSearch]           = useState('');
-  const [selected, setSelected]       = useState(null);
-  const [detailModal, setDetailModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState({});
-  const [adminComment, setAdminComment]   = useState('');
-  const [commenting, setCommenting]       = useState(false);
-  const [statusForm, setStatusForm]       = useState({ status: '', admin_comment: '' });
-  const [statusModal, setStatusModal]     = useState(false);
-
-  const fetchRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await requestsAPI.listAll();
-      const arr = Array.isArray(data) ? data : data?.data?.results || data?.results || [];
-      setRequests(arr);
-    } catch {
-      setRequests([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchRequests(); }, [fetchRequests]);
-
-  const counts = {
-    all:         requests.length,
-    raised:      requests.filter(r => r.status?.toLowerCase() === 'raised').length,
-    'in process':requests.filter(r => r.status?.toLowerCase() === 'in process').length,
-    completed:   requests.filter(r => r.status?.toLowerCase() === 'completed').length,
-    rejected:    requests.filter(r => r.status?.toLowerCase() === 'rejected').length,
-  };
-
-  const filtered = requests
-    .filter(r => filter === 'all' || r.status?.toLowerCase() === filter)
-    .filter(r =>
-      !search ||
-      String(r.id).includes(search) ||
-      (r.request_type || '').toLowerCase().includes(search.toLowerCase()) ||
-      (r.username || r.user || '').toLowerCase().includes(search.toLowerCase())
-    );
-
-  const openDetail = (req) => {
-    setSelected(req);
-    setDetailModal(true);
-    setAdminComment('');
-  };
-
-  const handleStatusUpdate = async () => {
-    if (!statusForm.status) return;
-    setActionLoading(s => ({ ...s, [selected.id]: 'status' }));
-    try {
-      await requestsAPI.updateStatus(selected.id, {
-        status: statusForm.status,
-        admin_comment: statusForm.admin_comment,
-      });
-      toast.success('Status updated successfully.');
-      setStatusModal(false);
-      setStatusForm({ status: '', admin_comment: '' });
-      fetchRequests();
-      setDetailModal(false);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(s => ({ ...s, [selected.id]: null }));
-    }
-  };
-
-  const handleAdminComment = async () => {
-    if (!adminComment.trim()) return;
-    setCommenting(true);
-    try {
-      await requestsAPI.adminComment(selected.id, { comment: adminComment });
-      toast.success('Comment posted.');
-      setAdminComment('');
-      fetchRequests();
-      setDetailModal(false);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setCommenting(false);
-    }
-  };
-
-  const FILTER_TABS = [
-    { id: 'all',         label: 'All'        },
-    { id: 'raised',      label: 'Raised'     },
-    { id: 'in process',  label: 'In Process' },
-    { id: 'completed',   label: 'Completed'  },
-    { id: 'rejected',    label: 'Rejected'   },
-  ];
-
-  return (
-    <div>
-      <SectionHeader
-        title="Requests Received"
-        subtitle={`${requests.length} total requests from users`}
-        actions={
-          <Btn variant="ghost" onClick={fetchRequests}>
-            <RefreshCw size={13} /> Refresh
-          </Btn>
-        }
-      />
-
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: BG_DEEP, borderRadius: 12, width: 'fit-content', border: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
-        {FILTER_TABS.map(({ id, label }) => (
-          <button key={id} onClick={() => setFilter(id)} style={{
-            padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
-            background: filter === id ? BG_RAISED : 'transparent',
-            color: filter === id ? ACCENT : TEXT_2,
-            fontFamily: FONT_DISPLAY, fontSize: 12, fontWeight: 700,
-            boxShadow: filter === id ? `0 0 0 1px ${ACCENT}30` : 'none',
-            transition: 'all 0.15s',
-          }}>
-            {label}
-            {counts[id] > 0 && (
-              <span style={{ marginLeft: 6, padding: '1px 6px', borderRadius: 10, background: filter === id ? `${ACCENT}20` : 'rgba(128,128,128,0.12)', color: filter === id ? ACCENT : TEXT_3, fontSize: 10, fontFamily: FONT_MONO }}>
-                {counts[id]}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by request ID, type, or username…" />
-
-      {/* Table */}
-      {loading ? (
-        <div style={{ padding: 48, textAlign: 'center' }}><Spinner size={24} /></div>
-      ) : filtered.length === 0 ? (
-        <div style={{ ...card({ padding: 48 }), textAlign: 'center' }}>
-          <Inbox size={40} color={TEXT_3} style={{ margin: '0 auto 12px' }} />
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: TEXT_1, marginBottom: 6 }}>No requests found</div>
-          <div style={{ color: TEXT_2, fontSize: 13 }}>{search ? 'Try a different search term.' : `No ${filter === 'all' ? '' : filter} requests yet.`}</div>
-        </div>
-      ) : (
-        <div style={card({ padding: 0, overflow: 'hidden' })}>
-          <PTable
-            columns={['Req ID', 'User', 'Type', 'Description', 'Status', 'Date', 'Actions']}
-            rows={filtered.map((req) => (
-              <TR key={req.id} onClick={() => openDetail(req)}>
-                <TD mono muted>
-                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: ACCENT }}>#{req.id}</span>
-                </TD>
-                <TD>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Avatar name={req.username || req.user || 'U'} size={28} />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: TEXT_1 }}>{req.username || req.user || '—'}</div>
-                      {req.user_id && <div style={{ fontSize: 10, color: TEXT_3 }}>ID #{req.user_id}</div>}
-                    </div>
-                  </div>
-                </TD>
-                <TD>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_1, background: `${ACCENT}10`, border: `1px solid ${ACCENT}18`, borderRadius: 6, padding: '2px 8px' }}>
-                    {req.request_type || 'General'}
-                  </span>
-                </TD>
-                <TD muted style={{ fontSize: 12, maxWidth: 220 }}>
-                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {req.description || '—'}
-                  </span>
-                </TD>
-                <TD><ReqStatusPill status={req.status || 'raised'} /></TD>
-                <TD muted style={{ fontSize: 11 }}>
-                  {req.created_at ? new Date(req.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                </TD>
-                <TD>
-                  <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                    <Btn size="sm" variant="primary" onClick={() => { setSelected(req); setStatusForm({ status: req.status || 'raised', admin_comment: req.admin_comment || '' }); setStatusModal(true); }}>
-                      <CheckCircle2 size={11} /> Update
-                    </Btn>
-                    <Btn size="sm" variant="ghost" onClick={() => openDetail(req)}>
-                      <Eye size={11} /> View
-                    </Btn>
-                  </div>
-                </TD>
-              </TR>
-            ))}
-          />
-        </div>
-      )}
-
-      {/* Detail Modal */}
-      <PModal open={detailModal} onClose={() => { setDetailModal(false); setSelected(null); }} title={`Request #${selected?.id} — Details`} width={580}>
-        {selected && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Grid info */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-              {[
-                { label: 'Request ID',   value: `#${selected.id}` },
-                { label: 'User',         value: selected.username || selected.user || '—' },
-                { label: 'User ID',      value: selected.user_id ? `#${selected.user_id}` : '—' },
-                { label: 'Type',         value: selected.request_type || 'General' },
-                { label: 'Status',       value: <ReqStatusPill status={selected.status || 'raised'} /> },
-                { label: 'Date',         value: selected.created_at ? new Date(selected.created_at).toLocaleDateString('en-IN') : '—' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ padding: '10px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}` }}>
-                  <div style={{ fontSize: 9, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_1 }}>{value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            <div style={{ padding: '12px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 10, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>User Description</div>
-              <p style={{ fontSize: 13, color: TEXT_2, margin: 0, lineHeight: 1.7 }}>{selected.description || 'No description.'}</p>
-            </div>
-
-            {/* User comment */}
-            {selected.user_comment && (
-              <div style={{ padding: '12px 14px', borderRadius: 10, background: `${ACCENT}06`, border: `1px solid ${ACCENT}18` }}>
-                <div style={{ fontSize: 10, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 6 }}>User Comment</div>
-                <p style={{ fontSize: 13, color: TEXT_1, margin: 0, lineHeight: 1.7 }}>{selected.user_comment}</p>
-              </div>
-            )}
-
-            {/* Uploaded document */}
-            {selected.document_url && (
-              <div style={{ padding: '12px 14px', borderRadius: 10, background: BG_DEEP, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Paperclip size={14} color={TEXT_3} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: TEXT_3, marginBottom: 3 }}>Uploaded Document</div>
-                  <a href={selected.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>View Document →</a>
-                </div>
-              </div>
-            )}
-
-            {/* Admin comment (existing) */}
-            {selected.admin_comment && (
-              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)' }}>
-                <div style={{ fontSize: 10, color: SUCCESS, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 6 }}>Admin Comment</div>
-                <p style={{ fontSize: 13, color: TEXT_1, margin: 0, lineHeight: 1.7 }}>{selected.admin_comment}</p>
-              </div>
-            )}
-
-            {/* Add admin comment */}
-            <div>
-              <div style={{ fontSize: 10, color: TEXT_3, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 8 }}>Post Admin Comment</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Textarea
-                  rows={2}
-                  placeholder="Write a comment for the user..."
-                  value={adminComment}
-                  onChange={e => setAdminComment(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <Btn variant="primary" onClick={handleAdminComment} disabled={!adminComment.trim() || commenting}>
-                  {commenting ? <Spinner size={12} color="#fff" /> : <Send size={13} />}
-                </Btn>
-              </div>
-            </div>
-
-            {/* Quick status actions */}
-            <div style={{ display: 'flex', gap: 8, paddingTop: 4, borderTop: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: TEXT_3, alignSelf: 'center', flex: 1 }}>Quick actions:</span>
-              {[
-                { label: 'Approve',    status: 'approved',    variant: 'success' },
-                { label: 'In Process', status: 'in process',  variant: 'ghost'   },
-                { label: 'Complete',   status: 'completed',   variant: 'ghost'   },
-                { label: 'Reject',     status: 'rejected',    variant: 'danger'  },
-              ].map(({ label, status, variant }) => (
-                <Btn key={status} size="sm" variant={variant}
-                  disabled={!!actionLoading[selected?.id] || selected?.status?.toLowerCase() === status}
-                  onClick={async () => {
-                    setActionLoading(s => ({ ...s, [selected.id]: status }));
-                    try {
-                      await requestsAPI.updateStatus(selected.id, { status, admin_comment: adminComment || undefined });
-                      toast.success(`Request marked as ${label}.`);
-                      fetchRequests();
-                      setDetailModal(false);
-                    } catch (err) { toast.error(err.message); }
-                    finally { setActionLoading(s => ({ ...s, [selected.id]: null })); }
-                  }}>
-                  {actionLoading[selected?.id] === status ? <Spinner size={10} color="#fff" /> : label}
-                </Btn>
-              ))}
-            </div>
-          </div>
-        )}
-      </PModal>
-
-      {/* Status Update Modal */}
-      <PModal open={statusModal} onClose={() => setStatusModal(false)} title={`Update Request #${selected?.id}`} width={420}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Select label="New Status" value={statusForm.status} onChange={e => setStatusForm(s => ({ ...s, status: e.target.value }))}>
-            <option value="raised">Raised</option>
-            <option value="in process">In Process</option>
-            <option value="completed">Completed</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </Select>
-          <Textarea label="Admin Comment (optional)" rows={3} placeholder="Reason for this status change..." value={statusForm.admin_comment} onChange={e => setStatusForm(s => ({ ...s, admin_comment: e.target.value }))} />
-          <Btn variant="primary" onClick={handleStatusUpdate} disabled={!statusForm.status || !!actionLoading[selected?.id]} style={{ justifyContent: 'center' }}>
-            {actionLoading[selected?.id] === 'status' ? <><Spinner size={13} color="#fff" /> Updating…</> : 'Update Status'}
-          </Btn>
-        </div>
-      </PModal>
-    </div>
-  );
-};
+import { RequestsReceivedTab } from '../../features/enquiry/EnquiryUI';
 
 // ─── Analytics Tab ─────────────────────────────────────────────────────────────
 const AnalyticsTab = ({ users, cards }) => {
@@ -1304,6 +1010,7 @@ const AdminDashboard = () => {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+        @keyframes adminPulse { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)} 60%{box-shadow:0 0 0 7px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }

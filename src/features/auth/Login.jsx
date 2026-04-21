@@ -6,6 +6,33 @@ import { authAPI } from '../../services/api';
 import { useToast, Field, Button, Spinner } from '../../components/ui';
 import useAuthStore from '../../store/authStore';
 
+// ── Credify Logo SVG ──────────────────────────────────────────────────────────
+const CredifyLogo = ({ size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="10" fill="url(#credify-grad)"/>
+    {/* Shield */}
+    <path d="M20 7 L30 11 L30 21 Q30 29 20 33 Q10 29 10 21 L10 11 Z"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
+    {/* Card */}
+    <rect x="13" y="16" width="11" height="8" rx="1.5"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3"/>
+    <line x1="13" y1="19.5" x2="24" y2="19.5" stroke="rgba(255,255,255,0.9)" strokeWidth="1"/>
+    {/* Lock */}
+    <path d="M17.5 16 L17.5 14.5 Q17.5 13 19 13 Q20.5 13 20.5 14.5 L20.5 16"
+      stroke="rgba(255,255,255,0.85)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    {/* Checkmark */}
+    <path d="M26 15 L28 17.5 L32 13" stroke="#4ade80" strokeWidth="1.8"
+      fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    <defs>
+      <linearGradient id="credify-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#3b61f5"/>
+        <stop offset="100%" stopColor="#1d37cc"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+
 // ── Reactivation Modal ────────────────────────────────────────────────────────
 function ReactivationModal({ onClose }) {
   const toast = useToast();
@@ -385,24 +412,24 @@ export default function Login() {
 const S = {
   page: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: '#080c14', padding: 20, position: 'relative', overflow: 'hidden',
+    background: 'var(--auth-page-bg)', padding: 20, position: 'relative', overflow: 'hidden',
   },
   glow1: { position:'absolute', top:'-20%', left:'-10%', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(59,97,245,0.12) 0%, transparent 60%)', pointerEvents:'none' },
   glow2: { position:'absolute', bottom:'-20%', right:'-10%', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 60%)', pointerEvents:'none' },
   card: {
     width: '100%', maxWidth: 420, position: 'relative', zIndex: 1,
-    background: 'rgba(255,255,255,0.038)', border: '1px solid rgba(255,255,255,0.08)',
+    background: 'var(--auth-card-bg)', border: '1px solid var(--auth-card-border)',
     borderRadius: 20, padding: '36px 36px 28px', backdropFilter: 'blur(20px)',
-    boxShadow: '0 32px 80px rgba(0,0,0,0.5)',
+    boxShadow: 'var(--auth-card-shadow)',
   },
   logoRow:   { display:'flex', alignItems:'center', gap:10, marginBottom:28 },
   logoIcon:  { width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,#3b61f5,#1d37cc)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(59,97,245,0.4)' },
-  logoText:  { fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:20, color:'#f0f4ff', letterSpacing:'-0.03em' },
-  heading:   { margin:'0 0 6px', fontFamily:"'Sora',sans-serif", fontSize:24, fontWeight:800, color:'#f0f4ff', letterSpacing:'-0.03em' },
-  subheading:{ margin:'0 0 28px', fontSize:13, color:'#8b96b0' },
+  logoText:  { fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:20, color:'var(--dash-text-primary)', letterSpacing:'-0.03em' },
+  heading:   { margin:'0 0 6px', fontFamily:"'Sora',sans-serif", fontSize:24, fontWeight:800, color:'var(--dash-text-primary)', letterSpacing:'-0.03em' },
+  subheading:{ margin:'0 0 28px', fontSize:13, color:'var(--dash-text-secondary)' },
   form:      { display:'flex', flexDirection:'column', gap:16 },
-  footer:    { margin:'20px 0 0', textAlign:'center', fontSize:13, color:'#8b96b0' },
-  demoHint:  { marginTop:16, textAlign:'center', padding:'8px 12px', background:'rgba(255,255,255,0.03)', borderRadius:7, border:'1px dashed rgba(255,255,255,0.07)' },
+  footer:    { margin:'20px 0 0', textAlign:'center', fontSize:13, color:'var(--dash-text-secondary)' },
+  demoHint:  { marginTop:16, textAlign:'center', padding:'8px 12px', background:'var(--bg-subtle)', borderRadius:7, border:'1px dashed var(--border)' },
 
   // Deactivated alert box
   deactBox: {
@@ -428,7 +455,7 @@ const S = {
   // Always-visible reactivation button
   reactRow: {
     marginTop: 14, paddingTop: 14,
-    borderTop: '1px solid rgba(255,255,255,0.07)',
+    borderTop: '1px solid var(--border)',
     display: 'flex', justifyContent: 'center',
   },
   reactBtn: {

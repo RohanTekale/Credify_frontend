@@ -3,8 +3,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { devAPI } from '../../services/dev.service';
 
 const C = {
-  bg: '#080c14', bgCard: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSec: '#8b96b0', textMuted: '#4b5675',
+  bg: 'var(--dev-bg)', bgCard: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSec: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
   success: '#10b981', warning: '#f59e0b', danger: '#ef4444', mono: "'JetBrains Mono',monospace",
 };
 
@@ -91,7 +91,7 @@ export default function SentryErrors() {
 
       {/* Filters + Search */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--dev-card-bg)', borderRadius: 10, border: `1px solid ${C.border}` }}>
           {[['all','All'], ['critical','Critical'], ['error','Error'], ['warning','Warning']].map(([id, label]) => (
             <button key={id} onClick={() => setFilter(id)} style={{ padding: '6px 13px', borderRadius: 7, border: 'none', cursor: 'pointer', background: filter === id ? 'rgba(59,97,245,0.18)' : 'transparent', color: filter === id ? '#8ba7ff' : C.textSec, fontSize: 11, fontWeight: 700, fontFamily: "'DM Sans',sans-serif" }}>
               {label} {counts[id] != null && <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>{counts[id]}</span>}

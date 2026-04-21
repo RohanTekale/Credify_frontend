@@ -1,7 +1,7 @@
 // src/pages/auth/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CreditCard, Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { Field, Button, useToast } from '../../components/ui';
 
@@ -11,6 +11,29 @@ const rules = {
   password: v => !v ? 'Password is required' : v.length < 8 ? 'Min 8 characters' : '',
   phone_number: v => v && !/^\d{10}$/.test(v) ? '10-digit number required' : '',
 };
+
+
+// ── Credify Logo SVG ──────────────────────────────────────────────────────────
+const CredifyLogo = ({ size = 34 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="10" fill="url(#reg-credify-grad)"/>
+    <path d="M20 7 L30 11 L30 21 Q30 29 20 33 Q10 29 10 21 L10 11 Z"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
+    <rect x="13" y="16" width="11" height="8" rx="1.5"
+      fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.3"/>
+    <line x1="13" y1="19.5" x2="24" y2="19.5" stroke="rgba(255,255,255,0.9)" strokeWidth="1"/>
+    <path d="M17.5 16 L17.5 14.5 Q17.5 13 19 13 Q20.5 13 20.5 14.5 L20.5 16"
+      stroke="rgba(255,255,255,0.85)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    <path d="M26 15 L28 17.5 L32 13" stroke="#4ade80" strokeWidth="1.8"
+      fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    <defs>
+      <linearGradient id="reg-credify-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#3b61f5"/>
+        <stop offset="100%" stopColor="#1d37cc"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export default function Register() {
   const navigate = useNavigate();
@@ -57,7 +80,7 @@ export default function Register() {
       <div style={{ ...S.card, opacity:mounted?1:0, transform:mounted?'translateY(0)':'translateY(20px)', transition:'all 500ms cubic-bezier(0.16,1,0.3,1)' }}>
 
         <div style={S.logoRow}>
-          <div style={S.logoIcon}><CreditCard size={16} color="#fff"/></div>
+          <CredifyLogo size={34} />
           <span style={S.logoText}>Credify</span>
         </div>
 
@@ -65,13 +88,13 @@ export default function Register() {
         <div style={S.stepRow}>
           {[1,2].map(n => (
             <div key={n} style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <div style={{ ...S.stepDot, background: step>=n ? '#3b61f5' : 'rgba(255,255,255,0.1)', boxShadow: step>=n ? '0 0 10px rgba(59,97,245,0.5)' : 'none' }}>
+              <div style={{ ...S.stepDot, background: step>=n ? '#3b61f5' : 'var(--border)', boxShadow: step>=n ? '0 0 10px rgba(59,97,245,0.5)' : 'none' }}>
                 {step > n ? '✓' : n}
               </div>
-              <span style={{ fontSize:11, color: step>=n ? '#8ba7ff' : '#4b5675', fontWeight:600 }}>
+              <span style={{ fontSize:11, color: step>=n ? '#8ba7ff' : 'var(--dash-text-muted)', fontWeight:600 }}>
                 {n===1 ? 'Account' : 'Details'}
               </span>
-              {n < 2 && <div style={{ width:40, height:1, background: step>n ? '#3b61f5' : 'rgba(255,255,255,0.1)', marginLeft:4 }}/>}
+              {n < 2 && <div style={{ width:40, height:1, background: step>n ? '#3b61f5' : 'var(--border)', marginLeft:4 }}/>}
             </div>
           ))}
         </div>
@@ -96,13 +119,13 @@ export default function Register() {
             <>
               <Field label="Phone Number (optional)" type="tel" placeholder="9876543210" value={form.phone_number} onChange={set('phone_number')} error={errors.phone_number} icon={<Phone size={13}/>} />
               <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                <label style={{ fontSize:11, fontWeight:700, color:'#4b5675', letterSpacing:'0.07em', textTransform:'uppercase' }}>Address (optional)</label>
+                <label style={{ fontSize:11, fontWeight:700, color:'var(--dash-text-muted)', letterSpacing:'0.07em', textTransform:'uppercase' }}>Address (optional)</label>
                 <textarea
                   placeholder="Mumbai, India"
                   value={form.address}
                   onChange={set('address')}
                   rows={2}
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, padding:'10px 12px', color:'#f0f4ff', fontSize:13, resize:'vertical', outline:'none', fontFamily:"'DM Sans',sans-serif" }}
+                  style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:9, padding:'10px 12px', color:'var(--dash-text-primary)', fontSize:13, resize:'vertical', outline:'none', fontFamily:"'DM Sans',sans-serif" }}
                 />
               </div>
               <div style={{ display:'flex', gap:10, marginTop:4 }}>
@@ -123,16 +146,16 @@ export default function Register() {
 }
 
 const S = {
-  page: { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#080c14', padding:20, position:'relative', overflow:'hidden' },
+  page: { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--auth-page-bg)', padding:20, position:'relative', overflow:'hidden' },
   glow: { position:'absolute', top:'30%', left:'50%', transform:'translate(-50%,-50%)', width:700, height:700, borderRadius:'50%', background:'radial-gradient(circle, rgba(59,97,245,0.1) 0%, transparent 60%)', pointerEvents:'none' },
-  card: { width:'100%', maxWidth:420, background:'rgba(255,255,255,0.038)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:20, padding:'36px 36px 28px', backdropFilter:'blur(20px)', boxShadow:'0 32px 80px rgba(0,0,0,0.5)', position:'relative', zIndex:1 },
+  card: { width:'100%', maxWidth:420, background:'var(--auth-card-bg)', border:'1px solid var(--auth-card-border)', borderRadius:20, padding:'36px 36px 28px', backdropFilter:'blur(20px)', boxShadow:'var(--auth-card-shadow)', position:'relative', zIndex:1 },
   logoRow: { display:'flex', alignItems:'center', gap:10, marginBottom:24 },
   logoIcon: { width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#3b61f5,#1d37cc)', display:'flex', alignItems:'center', justifyContent:'center' },
-  logoText: { fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:20, color:'#f0f4ff' },
+  logoText: { fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:20, color:'var(--dash-text-primary)' },
   stepRow: { display:'flex', alignItems:'center', gap:4, marginBottom:22 },
   stepDot: { width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:'#fff', flexShrink:0, transition:'all 300ms' },
-  heading: { margin:'0 0 5px', fontFamily:"'Sora',sans-serif", fontSize:22, fontWeight:800, color:'#f0f4ff', letterSpacing:'-0.02em' },
-  sub: { margin:'0 0 24px', fontSize:13, color:'#8b96b0' },
+  heading: { margin:'0 0 5px', fontFamily:"'Sora',sans-serif", fontSize:22, fontWeight:800, color:'var(--dash-text-primary)', letterSpacing:'-0.02em' },
+  sub: { margin:'0 0 24px', fontSize:13, color:'var(--dash-text-secondary)' },
   form: { display:'flex', flexDirection:'column', gap:14 },
-  footer: { margin:'18px 0 0', textAlign:'center', fontSize:13, color:'#8b96b0' },
+  footer: { margin:'18px 0 0', textAlign:'center', fontSize:13, color:'var(--dash-text-secondary)' },
 };

@@ -1,25 +1,11 @@
-// src/pages/dev/MigrationStatus.jsx — Phase 1: Django Migration Status
+// src/pages/dev/MigrationStatus.jsx
 import { useEffect, useState, useCallback } from 'react';
 import { devAPI } from '../../services/dev.service';
 
 const C = {
-  bg: '#080c14', bgCard: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSec: '#8b96b0', textMuted: '#4b5675',
+  bg: 'var(--dev-bg)', bgCard: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSec: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
   success: '#10b981', warning: '#f59e0b', danger: '#ef4444', mono: "'JetBrains Mono',monospace",
-};
-
-const MOCK_DATA = {
-  pending_count: 0,
-  last_migrated_at: '2026-04-18 23:01:22',
-  apps: [
-    { app: 'auth',         migrations: [{ name: '0001_initial', applied: true }, { name: '0002_alter_permission', applied: true }] },
-    { app: 'users',        migrations: [{ name: '0001_initial', applied: true }, { name: '0002_add_kyc_fields', applied: true }, { name: '0003_add_referral', applied: true }] },
-    { app: 'cards',        migrations: [{ name: '0001_initial', applied: true }, { name: '0002_add_virtual_card', applied: true }] },
-    { app: 'enquiry',      migrations: [{ name: '0001_initial', applied: true }, { name: '0002_add_document', applied: true }, { name: '0003_add_admin_comment', applied: false }] },
-    { app: 'transactions', migrations: [{ name: '0001_initial', applied: true }, { name: '0002_add_merchant', applied: true }] },
-    { app: 'notifications',migrations: [{ name: '0001_initial', applied: true }] },
-    { app: 'dev_panel',    migrations: [{ name: '0001_initial', applied: true }, { name: '0002_add_auditlog', applied: true }] },
-  ],
 };
 
 function Spinner() {
@@ -27,17 +13,17 @@ function Spinner() {
 }
 
 export default function MigrationStatus() {
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]         = useState(null);
+  const [loading, setLoading]   = useState(true);
   const [expanded, setExpanded] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await devAPI.getMigrations();
-      setData(res.data || MOCK_DATA);
+      setData(res.data ?? null);
     } catch {
-      setData(MOCK_DATA);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -47,12 +33,29 @@ export default function MigrationStatus() {
 
   const toggleApp = (app) => setExpanded(e => ({ ...e, [app]: !e[app] }));
 
-  if (loading) return <div style={{ padding: 64, textAlign: 'center', color: C.textSec }}><Spinner /> <span style={{ marginLeft: 10, fontSize: 13 }}>Loading migration status…</span></div>;
-  if (!data) return null;
+  if (loading) return (
+    <div style={{ padding: 64, textAlign: 'center', color: C.textSec }}>
+      <Spinner /> <span style={{ marginLeft: 10, fontSize: 13 }}>Loading migration status…</span>
+    </div>
+  );
 
-  const totalMigrations = data.apps?.reduce((s, a) => s + a.migrations.length, 0) || 0;
-  const appliedCount    = data.apps?.reduce((s, a) => s + a.migrations.filter(m => m.applied).length, 0) || 0;
-  const pending         = data.pending_count ?? (totalMigrations - appliedCount);
+  if (!data || !data.apps) return (
+    <div style={{ padding: 64, textAlign: 'center', color: C.danger, fontSize: 13 }}>
+      Failed to load migration data.
+    </div>
+  );
+
+  const apps          = data.apps ?? [];
+  const totalApplied  = data.total_applied ?? 0;
+  const totalPending  = data.total_pending ?? 0;
+  const totalMigs     = totalApplied + totalPending;
+
+  // Find the most recent last_applied_at across all apps
+  const lastMigratedAt = apps
+    .map(a => a.last_applied_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null;
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
@@ -70,12 +73,12 @@ export default function MigrationStatus() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Total Apps',       value: data.apps?.length || 0, color: C.brand   },
-          { label: 'Total Migrations', value: totalMigrations,         color: C.textSec },
-          { label: 'Applied',          value: appliedCount,            color: C.success },
-          { label: 'Pending',          value: pending,                 color: pending > 0 ? C.danger : C.success },
+          { label: 'Total Apps',       value: apps.length,   color: C.brand   },
+          { label: 'Total Migrations', value: totalMigs,     color: C.textSec },
+          { label: 'Applied',          value: totalApplied,  color: C.success },
+          { label: 'Pending',          value: totalPending,  color: totalPending > 0 ? C.danger : C.success },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: '16px 18px', borderRadius: 12, background: C.bgCard, border: `1px solid ${pending > 0 && label === 'Pending' ? 'rgba(239,68,68,0.3)' : C.border}` }}>
+          <div key={label} style={{ padding: '16px 18px', borderRadius: 12, background: C.bgCard, border: `1px solid ${totalPending > 0 && label === 'Pending' ? 'rgba(239,68,68,0.3)' : C.border}` }}>
             <div style={{ fontSize: 24, fontWeight: 800, color, fontFamily: "'Sora',sans-serif", letterSpacing: '-0.02em' }}>{value}</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3 }}>{label}</div>
           </div>
@@ -83,30 +86,35 @@ export default function MigrationStatus() {
       </div>
 
       {/* Health banner */}
-      <div style={{ padding: '12px 18px', borderRadius: 10, marginBottom: 20, background: pending === 0 ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${pending === 0 ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 16 }}>{pending === 0 ? '✅' : '⚠️'}</span>
+      <div style={{ padding: '12px 18px', borderRadius: 10, marginBottom: 20, background: totalPending === 0 ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${totalPending === 0 ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 16 }}>{totalPending === 0 ? '✅' : '⚠️'}</span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: pending === 0 ? '#34d399' : '#f87171' }}>
-            {pending === 0 ? 'All migrations applied — database is up to date' : `${pending} pending migration${pending > 1 ? 's' : ''} — run manage.py migrate`}
+          <div style={{ fontSize: 13, fontWeight: 700, color: totalPending === 0 ? '#34d399' : '#f87171' }}>
+            {totalPending === 0
+              ? 'All migrations applied — database is up to date'
+              : `${totalPending} pending migration${totalPending > 1 ? 's' : ''} — run manage.py migrate`}
           </div>
-          {data.last_migrated_at && (
-            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2, fontFamily: C.mono }}>Last migrated: {data.last_migrated_at}</div>
+          {lastMigratedAt && (
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2, fontFamily: C.mono }}>Last migrated: {lastMigratedAt}</div>
           )}
         </div>
       </div>
 
       {/* Per-app breakdown */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {(data.apps || []).map((appData) => {
-          const appPending = appData.migrations.filter(m => !m.applied).length;
-          const isExpanded = expanded[appData.app];
+        {apps.map((appData) => {
+          const appPending  = appData.pending_count ?? 0;
+          const appApplied  = appData.applied_count ?? 0;
+          const pendingList = appData.pending ?? [];
+          const isExpanded  = expanded[appData.app];
+
           return (
             <div key={appData.app} style={{ background: C.bgCard, border: `1px solid ${appPending > 0 ? 'rgba(239,68,68,0.25)' : C.border}`, borderRadius: 12, overflow: 'hidden' }}>
               {/* App header */}
               <button onClick={() => toggleApp(appData.app)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', background: 'none', border: 'none', cursor: 'pointer', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.text, fontFamily: C.mono }}>{appData.app}</span>
-                  <span style={{ fontSize: 10, color: C.textMuted }}>{appData.migrations.length} migration{appData.migrations.length !== 1 ? 's' : ''}</span>
+                  <span style={{ fontSize: 10, color: C.textMuted }}>{appApplied + appPending} migration{(appApplied + appPending) !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {appPending > 0 ? (
@@ -120,16 +128,23 @@ export default function MigrationStatus() {
                 </div>
               </button>
 
-              {/* Migration list */}
+              {/* Expanded detail */}
               {isExpanded && (
                 <div style={{ borderTop: `1px solid ${C.border}` }}>
-                  {appData.migrations.map((m, i) => (
-                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 18px 9px 32px', borderBottom: i < appData.migrations.length - 1 ? `1px solid rgba(255,255,255,0.03)` : 'none' }}>
-                      <span style={{ fontSize: 14, flexShrink: 0 }}>{m.applied ? '✅' : '⏳'}</span>
-                      <span style={{ fontSize: 11, fontFamily: C.mono, color: m.applied ? C.textSec : '#fbbf24', flex: 1 }}>{m.name}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: m.applied ? '#34d399' : '#fbbf24', background: m.applied ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', padding: '2px 7px', borderRadius: 10 }}>
-                        {m.applied ? 'Applied' : 'Pending'}
-                      </span>
+                  {/* Applied count row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 18px 9px 32px', borderBottom: pendingList.length > 0 ? `1px solid rgba(255,255,255,0.03)` : 'none' }}>
+                    <span style={{ fontSize: 14 }}>✅</span>
+                    <span style={{ fontSize: 11, fontFamily: C.mono, color: C.textSec, flex: 1 }}>{appApplied} applied migration{appApplied !== 1 ? 's' : ''}</span>
+                    {appData.last_applied_at && (
+                      <span style={{ fontSize: 10, color: C.textMuted, fontFamily: C.mono }}>last: {appData.last_applied_at.replace('T', ' ').slice(0, 19)}</span>
+                    )}
+                  </div>
+                  {/* Pending migrations listed individually */}
+                  {pendingList.map((name, i) => (
+                    <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 18px 9px 32px', borderBottom: i < pendingList.length - 1 ? `1px solid rgba(255,255,255,0.03)` : 'none' }}>
+                      <span style={{ fontSize: 14 }}>⏳</span>
+                      <span style={{ fontSize: 11, fontFamily: C.mono, color: '#fbbf24', flex: 1 }}>{name}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#fbbf24', background: 'rgba(245,158,11,0.1)', padding: '2px 7px', borderRadius: 10 }}>Pending</span>
                     </div>
                   ))}
                 </div>

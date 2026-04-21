@@ -288,9 +288,9 @@ function generateMockData(table, n) {
 }
 
 const C = {
-  bg: '#080c14', bgCard: 'rgba(255,255,255,0.035)', bgRow: 'rgba(255,255,255,0.02)',
-  border: 'rgba(255,255,255,0.07)', brand: '#3b61f5',
-  text: '#f0f4ff', textSecondary: '#8b96b0', textMuted: '#4b5675',
+  bg: 'var(--dev-bg)', bgCard: 'var(--dev-card-bg)', bgRow: 'rgba(255,255,255,0.02)',
+  border: 'var(--dev-card-border)', brand: '#3b61f5',
+  text: 'var(--dev-text-primary)', textSecondary: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
 };
 
 const S = {
@@ -299,7 +299,7 @@ const S = {
   breadLink: { fontSize: 13, color: C.brand, textDecoration: 'none', opacity: 0.8 },
   breadSep: { fontSize: 13, color: C.textMuted },
   breadCurrent: { fontSize: 13, color: C.text, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 },
-  rowCount: { fontSize: 11, color: C.textMuted, background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 10, marginLeft: 4 },
+  rowCount: { fontSize: 11, color: C.textMuted, background: 'var(--dev-mono-bg)', padding: '2px 8px', borderRadius: 10, marginLeft: 4 },
   toolbar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   searchWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
   searchIcon: { position: 'absolute', left: 10, color: C.textMuted, pointerEvents: 'none' },
@@ -324,7 +324,7 @@ const S = {
   table: { width: '100%', borderCollapse: 'collapse', tableLayout: 'auto' },
   th: {
     padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-    letterSpacing: '0.07em', color: C.textMuted, background: 'rgba(255,255,255,0.03)',
+    letterSpacing: '0.07em', color: C.textMuted, background: 'var(--dev-card-bg)',
     borderBottom: `1px solid ${C.border}`, cursor: 'pointer', whiteSpace: 'nowrap',
     userSelect: 'none', fontFamily: "'DM Sans',sans-serif",
   },
@@ -332,7 +332,7 @@ const S = {
   sortArrow: { color: C.brand, fontSize: 12 },
   tr: { transition: 'background 100ms' },
   td: {
-    padding: '8px 14px', fontSize: 13, color: C.text, borderBottom: `1px solid rgba(255,255,255,0.04)`,
+    padding: '8px 14px', fontSize: 13, color: C.text, borderBottom: `1px solid var(--dev-divider)`,
     maxWidth: 220, overflow: 'hidden', verticalAlign: 'middle',
   },
   idCell: { color: C.textMuted, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 },

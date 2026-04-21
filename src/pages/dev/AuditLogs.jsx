@@ -12,7 +12,7 @@ const LEVEL_COLORS = {
 };
 
 function LogRow({ log, isNew }) {
-  const color = LEVEL_COLORS[log.level] || '#8b96b0';
+  const color = LEVEL_COLORS[log.level] || 'var(--dev-text-secondary)';
   return (
     <div style={{
       ...S.logRow,
@@ -31,18 +31,18 @@ function LogRow({ log, isNew }) {
 }
 
 function CountChip({ level, count, active, onClick }) {
-  const color = LEVEL_COLORS[level] || '#8b96b0';
+  const color = LEVEL_COLORS[level] || 'var(--dev-text-secondary)';
   return (
     <button
       onClick={onClick}
       style={{
         ...S.countChip,
-        borderColor: active ? `${color}50` : 'rgba(255,255,255,0.07)',
+        borderColor: active ? `${color}50` : 'var(--dev-card-border)',
         background: active ? `${color}15` : 'rgba(255,255,255,0.032)',
-        color: active ? color : '#4b5675',
+        color: active ? color : 'var(--dev-text-muted)',
       }}
     >
-      <span style={{ fontWeight: 800, color: active ? color : '#8b96b0' }}>{count}</span>
+      <span style={{ fontWeight: 800, color: active ? color : 'var(--dev-text-secondary)' }}>{count}</span>
       <span>{level}</span>
     </button>
   );
@@ -129,7 +129,7 @@ export default function AuditLogs() {
             style={{ ...S.liveBtn, ...(live ? S.liveBtnOn : S.liveBtnOff) }}
             onClick={() => setLive(l => !l)}
           >
-            <span style={{ ...S.liveDot, background: live ? '#10b981' : '#4b5675' }} />
+            <span style={{ ...S.liveDot, background: live ? '#10b981' : 'var(--dev-text-muted)' }} />
             {live ? 'Live' : 'Paused'}
           </button>
           <button style={S.refreshBtn} onClick={() => fetchLogs(false)} title="Refresh">
@@ -163,12 +163,12 @@ export default function AuditLogs() {
           />
         ))}
         <div style={{ ...S.countChip, marginLeft: 'auto', cursor: 'default' }}>
-          <span style={{ fontWeight: 800, color: '#f0f4ff' }}>{filtered.length}</span>
-          <span style={{ color: '#4b5675' }}>SHOWN</span>
+          <span style={{ fontWeight: 800, color: 'var(--dev-text-primary)' }}>{filtered.length}</span>
+          <span style={{ color: 'var(--dev-text-muted)' }}>SHOWN</span>
         </div>
         <div style={{ ...S.countChip, cursor: 'default' }}>
-          <span style={{ fontWeight: 800, color: '#8b96b0' }}>{total}</span>
-          <span style={{ color: '#4b5675' }}>TOTAL</span>
+          <span style={{ fontWeight: 800, color: 'var(--dev-text-secondary)' }}>{total}</span>
+          <span style={{ color: 'var(--dev-text-muted)' }}>TOTAL</span>
         </div>
       </div>
 
@@ -252,8 +252,8 @@ export default function AuditLogs() {
 }
 
 const C = {
-  bgCard:'rgba(255,255,255,0.032)', border:'rgba(255,255,255,0.07)',
-  brand:'#3b61f5', text:'#f0f4ff', textSec:'#8b96b0', textMuted:'#4b5675',
+  bgCard:'rgba(255,255,255,0.032)', border:'var(--dev-card-border)',
+  brand:'#3b61f5', text:'var(--dev-text-primary)', textSec:'var(--dev-text-secondary)', textMuted:'var(--dev-text-muted)',
 };
 
 const S = {
@@ -271,7 +271,7 @@ const S = {
   errorBanner: { display:'flex', alignItems:'center', gap:8, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', fontSize:13, color:'#fca5a5' },
   retryBtn:    { marginLeft:'auto', background:'rgba(239,68,68,0.15)', border:'none', borderRadius:6, color:'#ef4444', padding:'4px 10px', fontSize:12, cursor:'pointer', fontWeight:600 },
   statsRow:    { display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' },
-  countChip:   { display:'flex', gap:5, alignItems:'center', border:'1px solid', borderRadius:8, padding:'5px 12px', fontFamily:"'JetBrains Mono',monospace", fontSize:11.5, cursor:'pointer', transition:'all 150ms', background:'rgba(255,255,255,0.032)', borderColor:'rgba(255,255,255,0.07)', color:'#4b5675' },
+  countChip:   { display:'flex', gap:5, alignItems:'center', border:'1px solid', borderRadius:8, padding:'5px 12px', fontFamily:"'JetBrains Mono',monospace", fontSize:11.5, cursor:'pointer', transition:'all 150ms', background:'rgba(255,255,255,0.032)', borderColor:'var(--dev-card-border)', color:'var(--dev-text-muted)' },
   filters:     { display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' },
   levelBtns:   { display:'flex', gap:4 },
   lvlBtn:      { background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:6, color:C.textMuted, padding:'5px 10px', fontSize:11, cursor:'pointer', fontFamily:"'JetBrains Mono',monospace", fontWeight:600, letterSpacing:'0.04em', transition:'all 150ms' },
@@ -280,7 +280,7 @@ const S = {
   searchInput: { background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, fontSize:13, padding:'7px 32px 7px 30px', outline:'none', width:'100%', fontFamily:"'DM Sans',sans-serif" },
   clearSearch: { position:'absolute', right:8, background:'transparent', border:'none', color:C.textMuted, cursor:'pointer', fontSize:11, padding:2 },
   logBox:      { flex:1, background:'rgba(0,0,0,0.35)', border:`1px solid ${C.border}`, borderRadius:12, overflow:'hidden', display:'flex', flexDirection:'column' },
-  logHeader:   { display:'flex', gap:12, padding:'9px 16px', borderBottom:`1px solid ${C.border}`, background:'rgba(255,255,255,0.025)' },
+  logHeader:   { display:'flex', gap:12, padding:'9px 16px', borderBottom:`1px solid ${C.border}`, background:'var(--dev-row-hover)' },
   logCol:      { fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:C.textMuted, flexShrink:0, fontFamily:"'DM Sans',sans-serif" },
   logStream:   { flex:1, overflowY:'auto', maxHeight:500, display:'flex', flexDirection:'column' },
   logRow:      { display:'flex', alignItems:'center', gap:12, padding:'7px 16px', borderBottom:'1px solid rgba(255,255,255,0.03)', transition:'background 600ms ease' },

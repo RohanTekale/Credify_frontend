@@ -2,8 +2,8 @@
 import { useLocation } from 'react-router-dom';
 
 const C = {
-  bgCard: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSec: '#8b96b0', textMuted: '#4b5675',
+  bgCard: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSec: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
   mono: "'JetBrains Mono',monospace",
 };
 
@@ -66,7 +66,7 @@ export default function ComingSoon() {
 
         {/* Endpoint */}
         {meta.endpoint && (
-          <div style={{ padding: '8px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 12, color: C.textMuted, marginBottom: 24 }}>
+          <div style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--dev-card-bg)', border: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: 12, color: C.textMuted, marginBottom: 24 }}>
             {meta.endpoint}
           </div>
         )}
@@ -78,7 +78,7 @@ export default function ComingSoon() {
               What you'll see here
             </div>
             {meta.features.map((f, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < meta.features.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < meta.features.length - 1 ? `1px solid var(--dev-divider)` : 'none' }}>
                 <span style={{ width: 18, height: 18, borderRadius: '50%', background: `${meta.color}15`, border: `1px solid ${meta.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: meta.color, flexShrink: 0 }}>
                   ✓
                 </span>

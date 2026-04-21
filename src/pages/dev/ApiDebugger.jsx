@@ -224,8 +224,8 @@ function getMockResponse(method, path) {
 }
 
 const C = {
-  bgCard: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSecondary: '#8b96b0', textMuted: '#4b5675',
+  bgCard: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSecondary: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
 };
 
 const S = {
@@ -236,7 +236,7 @@ const S = {
   layout: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, flex: 1 },
   leftPane: { display: 'flex', flexDirection: 'column', gap: 12, background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px' },
   presetsRow: { display: 'flex', gap: 6, flexWrap: 'wrap' },
-  presetBtn: { display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', fontSize: 11, cursor: 'pointer', color: C.textSecondary, fontFamily: "'JetBrains Mono',monospace" },
+  presetBtn: { display: 'flex', alignItems: 'center', gap: 5, background: 'var(--dev-card-bg)', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', fontSize: 11, cursor: 'pointer', color: C.textSecondary, fontFamily: "'JetBrains Mono',monospace" },
   presetMethod: { fontWeight: 800, fontSize: 10, letterSpacing: '0.05em' },
   urlBar: { display: 'flex', gap: 8, alignItems: 'center' },
   methodSelect: { background: 'rgba(0,0,0,0.3)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 10px', fontSize: 12, fontWeight: 800, outline: 'none', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace", letterSpacing: '0.04em', width: 80 },

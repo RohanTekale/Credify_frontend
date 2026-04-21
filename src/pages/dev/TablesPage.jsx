@@ -35,7 +35,7 @@ function TableCard({ table, index }) {
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.97)',
         transition: `opacity 350ms ease, transform 350ms ease, border-color 200ms, box-shadow 200ms`,
-        borderColor: hovered ? 'rgba(59,97,245,0.3)' : 'rgba(255,255,255,0.07)',
+        borderColor: hovered ? 'rgba(59,97,245,0.3)' : 'var(--dev-card-border)',
         boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,97,245,0.15)' : '0 4px 24px rgba(0,0,0,0.2)',
         textDecoration: 'none',
       }}
@@ -165,8 +165,8 @@ export default function TablesPage() {
 }
 
 const C = {
-  bg: 'rgba(255,255,255,0.035)', border: 'rgba(255,255,255,0.07)',
-  brand: '#3b61f5', text: '#f0f4ff', textSecondary: '#8b96b0', textMuted: '#4b5675',
+  bg: 'var(--dev-card-bg)', border: 'var(--dev-card-border)',
+  brand: '#3b61f5', text: 'var(--dev-text-primary)', textSecondary: 'var(--dev-text-secondary)', textMuted: 'var(--dev-text-muted)',
 };
 
 const S = {
@@ -203,8 +203,8 @@ const S = {
   metric: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 },
   metricVal: { fontSize: 15, fontWeight: 700, color: C.text, fontFamily: "'Sora',sans-serif" },
   metricLabel: { fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' },
-  metricDiv: { width: 1, height: 28, background: 'rgba(255,255,255,0.07)' },
-  barTrack: { height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' },
+  metricDiv: { width: 1, height: 28, background: 'var(--dev-card-border)' },
+  barTrack: { height: 3, background: 'var(--dev-mono-bg)', borderRadius: 2, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 2, width: 0 },
   cardFoot: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   footLabel: { fontSize: 11, color: C.textMuted },
