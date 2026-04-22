@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
+import { Shield } from 'lucide-react';
 
 const avatarPalette = ['#3b61f5','#8b5cf6','#10b981','#f59e0b','#ec4899','#06b6d4'];
 
@@ -113,6 +114,8 @@ const Navbar = () => {
     { path:'/features', label:'Features' },
     { path:'/pricing',  label:'Pricing' },
     { path:'/faq',      label:'FAQ' },
+   { path:'/kyc', label:'KYC', icon: Shield },
+
   ];
 
   const isActive = (path) =>
@@ -185,6 +188,7 @@ const Navbar = () => {
                   e.currentTarget.style.background = 'none';
                 }}
               >
+                {link.icon && <link.icon size={14} style={{ marginRight: 6 }} />}
                 {link.label}
                 {isActive(link.path) && (
                   <span style={{

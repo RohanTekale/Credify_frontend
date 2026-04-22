@@ -39,6 +39,8 @@ import IndexHealth     from './pages/dev/IndexHealth';
 
 import useAuthStore  from './store/authStore';
 import useThemeStore from './store/themeStore';
+import KYCDashboard from './features/kyc/KYCDashboard';
+
 
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -114,6 +116,15 @@ const AppInner = () => {
             element={
               <ProtectedRoute>
                 {isAdmin ? <AdminDashboard /> : <Dashboard />}
+              </ProtectedRoute>
+            }
+          />
+       
+          <Route
+            path="/kyc"
+            element={
+              <ProtectedRoute>
+                <KYCDashboard />
               </ProtectedRoute>
             }
           />

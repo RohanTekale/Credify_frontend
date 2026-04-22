@@ -323,6 +323,7 @@ const Sidebar = ({ active, setActive, onLogout, user }) => {
 
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 const OverviewTab = ({ cards, transactions, loading, user }) => {
+  const navigate = useNavigate();
   const [go, setGo] = useState(false);
   const [revealed, setRevealed] = useState(false);
   useEffect(() => { const t = setTimeout(() => setGo(true), 200); return () => clearTimeout(t); }, []);
@@ -553,6 +554,40 @@ const OverviewTab = ({ cards, transactions, loading, user }) => {
               >
                 <Gift size={12} /> Redeem Points
               </button>
+            </div>
+          </div>
+
+          {/* KYC Status Card */}
+          <div
+            onClick={() => navigate('/kyc')}
+            className="animate-fade-up delay-400"
+            style={{
+              padding: '16px 18px',
+              borderRadius: 14,
+              background: 'linear-gradient(135deg,rgba(59,97,245,0.07),rgba(59,97,245,0.02))',
+              border: '1px solid rgba(59,97,245,0.14)',
+              cursor: 'pointer',
+              transition: 'all 200ms',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.borderColor = 'rgba(59,97,245,0.3)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.borderColor = 'rgba(59,97,245,0.14)';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--panel-label-color)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  KYC Status
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dash-text-primary)', marginTop: 4 }}>
+                  {user?.kyc_status || 'unverified'}
+                </div>
+              </div>
+              <Shield size={18} color="#3b61f5" />
             </div>
           </div>
 

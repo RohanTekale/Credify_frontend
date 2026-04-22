@@ -148,6 +148,35 @@ export const cardAPI = {
   createSubscription: (d) => http.post('/cards/subscriptions/create_subscription/', d),
 };
 
+
+export const kycAPI = {
+  // User flow
+  start:       ()        => http.post('/v2/kyc/start/'),
+  status:      ()        => http.get('/v2/kyc/status/'),
+  history:     ()        => http.get('/v2/kyc/history/'),
+  upload:      (fd)      => http.post('/v2/kyc/documents/upload/', fd, {
+                              headers: { 'Content-Type': 'multipart/form-data' },
+                            }),
+  viewDoc:     (id)      => http.get(`/v2/kyc/documents/${id}/view/`),
+  submit:      ()        => http.post('/v2/kyc/submit/'),
+  resubmit:    ()        => http.post('/v2/kyc/resubmit/'),
+  appeal:      (d)       => http.post('/v2/kyc/appeal/', d),
+  sendOTP:     (d)       => http.post('/v2/kyc/otp/send/', d),
+  verifyOTP:   (d)       => http.post('/v2/kyc/otp/verify/', d),
+
+  // Reviewer
+  queue:       (params)  => http.get('/v2/kyc/review/queue/', { params }),
+  claim:       (appId)   => http.post(`/v2/kyc/review/${appId}/claim/`),
+  approve:     (appId)   => http.post(`/v2/kyc/review/${appId}/approve/`),
+  reject:      (appId, d) => http.post(`/v2/kyc/review/${appId}/reject/`, d),
+  requestInfo: (appId, d) => http.post(`/v2/kyc/review/${appId}/request-info/`, d),
+  aml:         (appId)   => http.get(`/v2/kyc/review/${appId}/aml/`),
+
+  // Admin
+  stats:       ()        => http.get('/v2/kyc/admin/stats/'),
+  auditLog:    (params)  => http.get('/v2/kyc/admin/audit-log/', { params }),
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSACTIONS API
 // ─────────────────────────────────────────────────────────────────────────────
