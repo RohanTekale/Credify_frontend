@@ -80,9 +80,7 @@ const AppInner = () => {
               flexDirection: 'column',
               width:     '100%',
               minHeight: '100vh',
-              background: isDark
-                ? 'linear-gradient(135deg, #0F0F1C 0%, #1A1B2F 100%)'
-                : 'var(--hero-gradient)',
+              background: 'var(--bg-base)',
               overflowX: 'hidden',
               transition: 'background 300ms ease',
             }
