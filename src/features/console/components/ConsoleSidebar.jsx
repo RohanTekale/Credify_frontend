@@ -2,6 +2,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
+import useConsoleStore from '../store/consoleStore';
 import { userDisplayName, userInitials } from '../utils';
 
 const NAV_ICONS = {
@@ -76,9 +77,12 @@ const NavItem = ({ to, icon, children, badge, end }) => (
   </NavLink>
 );
 
-const ConsoleSidebar = ({ approvalsCount = 3 }) => {
+const ConsoleSidebar = () => {
   const navigate = useNavigate();
   const { user, isAdmin, logout } = useAuthStore();
+  const approvalsCount = useConsoleStore(
+    (s) => s.payments.filter((p) => p.status === 'in_approval').length
+  );
 
   const initials = userInitials(user);
   const displayName = userDisplayName(user);
@@ -109,7 +113,7 @@ const ConsoleSidebar = ({ approvalsCount = 3 }) => {
       <div className="navlab">Operate</div>
       <NavItem to="/dashboard" icon="dashboard" end>Dashboard</NavItem>
       <NavItem to="/dashboard/payments" icon="payments">Payments</NavItem>
-      <NavItem to="/dashboard/approvals" icon="approvals" badge={approvalsCount}>Approvals</NavItem>
+      <NavItem to="/dashboard/approvals" icon="approvals" badge={approvalsCount || null}>Approvals</NavItem>
       <NavItem to="/dashboard/recon" icon="recon">Reconciliation</NavItem>
       <NavItem to="/dashboard/events" icon="events">Events</NavItem>
       <NavItem to="/dashboard/ledger" icon="ledger">Ledger</NavItem>

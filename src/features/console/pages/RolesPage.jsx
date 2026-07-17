@@ -1,6 +1,6 @@
 // src/features/console/pages/RolesPage.jsx
 import React, { useState } from 'react';
-import { roles as initialRoles } from '../data/mockData';
+import useConsoleStore from '../store/consoleStore';
 import { useToast } from '../../../components/ui';
 
 const PERMS_LEFT = [
@@ -18,16 +18,17 @@ const PERMS_RIGHT = [
 
 const RolesPage = () => {
   const toast = useToast();
-  const [roles, setRoles] = useState(initialRoles);
+  const { roles, addRole } = useConsoleStore();
   const [showNewRole, setShowNewRole] = useState(false);
   const [roleName, setRoleName] = useState('');
 
   const createRole = () => {
-    const name = roleName.trim() || 'New Role';
-    setRoles((r) => [
-      ...r,
-      { role: name.toUpperCase(), roleClass: 'r-custom', type: 'Custom', members: '—', perms: 'Initiate payments · manage vendors · view recon' },
-    ]);
+    const name = roleName.trim();
+    if (!name) {
+      toast.error('Role name is required');
+      return;
+    }
+    addRole({ name, perms: 'Initiate payments · manage vendors · view recon' });
     setShowNewRole(false);
     setRoleName('');
     toast.success(`Role "${name}" created`);
@@ -46,13 +47,12 @@ const RolesPage = () => {
 
       <div className="card" style={{ padding: 0, marginBottom: 14 }}>
         <table>
-          <thead><tr><th>Role</th><th>Type</th><th>Members</th><th>Key permissions</th></tr></thead>
+          <thead><tr><th>Role</th><th>Type</th><th>Key permissions</th></tr></thead>
           <tbody>
             {roles.map((r, i) => (
               <tr key={i}>
                 <td><span className={`role ${r.roleClass}`}>{r.role}</span></td>
                 <td>{r.type}</td>
-                <td>{r.members}</td>
                 <td>{r.perms}</td>
               </tr>
             ))}
