@@ -279,7 +279,7 @@ export const RaiseRequestTab = () => {
     if (!userComment.trim()) return;
     setCommenting(true);
     try {
-      await requestsAPI.addComment(parseReqId(selectedReq), { body: userComment });
+      await requestsAPI.addComment(parseReqId(selectedReq), { user_comment: userComment });
       toast.success('Comment added!');
       setUserComment('');
       fetchRequests();

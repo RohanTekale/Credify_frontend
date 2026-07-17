@@ -1,6 +1,6 @@
 // src/App.jsx
-// Updated: uses themeStore so dark/light background is applied correctly
 import React, { useEffect } from 'react';
+
 import {
   BrowserRouter as Router,
   Routes, Route, Navigate, useLocation,
@@ -10,6 +10,7 @@ import Navbar              from './components/Navbar';
 import BackgroundParticles from './components/BackgroundParticles';
 import CredilyChatbot      from './components/CredilyChatbot';
 import { ToastProvider }   from './components/ui';
+import { CursorSpotlight } from './components/cinema/TouchFX';
 
 import Home     from './pages/Home';
 import Pricing  from './pages/Pricing';
@@ -22,15 +23,15 @@ import Dashboard      from './features/dashboard/Dashboard';
 import AdminDashboard from './features/admin/AdminDashboard';
 
 // ── Dev Panel pages ────────────────────────────────────────────────────────────
-import DevLayout    from './pages/dev/DevLayout';
-import DevDashboard from './pages/dev/DevDashboard';
-import TablesPage   from './pages/dev/TablesPage';
-import TableView    from './pages/dev/TableView';
-import QueryRunner  from './pages/dev/QueryRunner';
-import ApiDebugger  from './pages/dev/ApiDebugger';
-import AuditLogs    from './pages/dev/AuditLogs';
-import CeleryTasks  from './pages/dev/CeleryTasks';
-import SentryErrors from './pages/dev/SentryErrors';
+import DevLayout       from './pages/dev/DevLayout';
+import DevDashboard    from './pages/dev/DevDashboard';
+import TablesPage      from './pages/dev/TablesPage';
+import TableView       from './pages/dev/TableView';
+import QueryRunner     from './pages/dev/QueryRunner';
+import ApiDebugger     from './pages/dev/ApiDebugger';
+import AuditLogs       from './pages/dev/AuditLogs';
+import CeleryTasks     from './pages/dev/CeleryTasks';
+import SentryErrors    from './pages/dev/SentryErrors';
 import MigrationStatus from './pages/dev/MigrationStatus';
 import ComingSoon      from './pages/dev/ComingSoon';
 import RedisInspector  from './pages/dev/RedisInspector';
@@ -39,8 +40,7 @@ import IndexHealth     from './pages/dev/IndexHealth';
 
 import useAuthStore  from './store/authStore';
 import useThemeStore from './store/themeStore';
-import KYCDashboard from './features/kyc/KYCDashboard';
-
+import KYCDashboard  from './features/kyc/KYCDashboard';
 
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -68,31 +68,51 @@ const AppInner = () => {
   const { theme }    = useThemeStore();
   const { pathname } = useLocation();
 
-  const isDevPath  = pathname.startsWith('/dev');
-  const isDark     = theme === 'dark';
+  // Paths where the global Navbar + padding must be suppressed
+  // because those pages render their own full-screen shell
+  const { token } = useAuthStore();
+  const isDevPath   = pathname.startsWith('/dev');
+  const isAdminPath = pathname === '/dashboard' && isAdmin
+                   || pathname === '/admin';
+  // Suppress global marketing nav for ALL authenticated dashboard users too
+  const isUserDashboard = !!token && pathname === '/dashboard';
+
+  // Suppress global chrome for admin panel, dev panel, AND user dashboard
+  const suppressGlobalNav = isDevPath || isAdminPath || isUserDashboard;
+
+  const isDark = theme === 'dark';
 
   return (
     <div
       style={
-        isDevPath
-          ? {}
+        suppressGlobalNav
+          ? { minHeight: '100vh' }   // admin/dev manages its own layout
           : {
-              position:  'relative',
-              display:   'flex',
+              position:      'relative',
+              display:       'flex',
               flexDirection: 'column',
-              width:     '100%',
-              minHeight: '100vh',
-              background: 'var(--bg-base)',
-              overflowX: 'hidden',
-              transition: 'background 300ms ease',
+              width:         '100%',
+              minHeight:     '100vh',
+              background:    'var(--bg-base)',
+              overflowX:     'hidden',
+              transition:    'background 300ms ease',
             }
       }
     >
-      {!isDevPath && isDark && <BackgroundParticles />}
-      {!isDevPath && <Navbar />}
+      {/* Particles + Navbar only on public/user pages */}
+      {!suppressGlobalNav && isDark && <BackgroundParticles />}
+      {!suppressGlobalNav && <Navbar />}
+
+      {/* Global cinematic cursor light + click-burst feedback (desktop) */}
+      <CursorSpotlight />
+
       <ScrollToTop />
 
-      <main className={isDevPath ? '' : 'relative z-10 flex-1 flex flex-col pt-16'}>
+      {/*
+        pt-16 = 64px top padding to clear the fixed Navbar.
+        Don't apply on admin/dev — they manage their own spacing.
+      */}
+      <main className={suppressGlobalNav ? '' : 'relative z-10 flex-1 flex flex-col pt-16'}>
         <Routes>
           {/* ── Public pages ──────────────────────────────────────────── */}
           <Route path="/"         element={<Home />} />
@@ -119,7 +139,7 @@ const AppInner = () => {
               </ProtectedRoute>
             }
           />
-       
+
           <Route
             path="/kyc"
             element={
@@ -144,11 +164,9 @@ const AppInner = () => {
             <Route path="query"         element={<QueryRunner />} />
             <Route path="api"           element={<ApiDebugger />} />
             <Route path="logs"          element={<AuditLogs />} />
-            {/* Phase 1 */}
             <Route path="tasks"         element={<CeleryTasks />} />
             <Route path="sentry"        element={<SentryErrors />} />
             <Route path="migrations"    element={<MigrationStatus />} />
-            {/* Phase 2 — coming soon */}
             <Route path="redis"         element={<RedisInspector />} />
             <Route path="config"        element={<EnvConfig />} />
             <Route path="indexes"       element={<IndexHealth />} />
@@ -159,7 +177,8 @@ const AppInner = () => {
         </Routes>
       </main>
 
-      {!isDevPath && <CredilyChatbot />}
+      {/* Chatbot only on public/user-facing pages */}
+      {!suppressGlobalNav && <CredilyChatbot />}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, User, Phone, ArrowRight, AlertTriangle } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { Button, useToast, Spinner } from '../../components/ui';
+import { Tilt3D } from '../../components/cinema/TouchFX';
 
 const rules = {
   username: v => !v.trim() ? 'Username is required' : v.length < 3 ? 'Min 3 characters' : '',
@@ -122,11 +123,11 @@ export default function Register() {
       <div className="auth-glow-1" />
       <div className="auth-glow-2" />
 
-      <div className="auth-card" style={{
+      <Tilt3D strength={7} pop={22} className="auth-card" style={{
         opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0) scale(1)' : 'translateY(28px) scale(0.97)',
-        transition: 'all 0.55s cubic-bezier(0.16,1,0.3,1)',
-        borderRadius: 28, position: 'relative', zIndex: 1,
+        transform: mounted ? undefined : 'translateY(28px) scale(0.97)',
+        transition: 'opacity 0.55s cubic-bezier(0.16,1,0.3,1)',
+        borderRadius: 28, zIndex: 1,
         backdropFilter: 'blur(40px)',
         boxShadow: '0 32px 100px rgba(59,97,245,0.14),0 8px 32px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.6)',
       }}>
@@ -219,7 +220,7 @@ export default function Register() {
         <p className="auth-footer-text" style={{ marginTop: 22 }}>
           Already have an account?{' '}<Link to="/login" className="auth-link">Sign in</Link>
         </p>
-      </div>
+      </Tilt3D>
     </div>
   );
 }

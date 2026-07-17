@@ -283,3 +283,84 @@ export const adminAPI = {
 };
 
 export default http;
+// ─────────────────────────────────────────────────────────────────────────────
+// RECONCILIATION API  (mock — real endpoints TBD per backend)
+// ─────────────────────────────────────────────────────────────────────────────
+export const reconAPI = {
+  // GET /api/recon/runs/  — list reconciliation runs
+  listRuns: (params) => http.get('/recon/runs/', { params }).catch(() => ({
+    data: { results: [
+      { id: 1, ran_at: new Date().toISOString(), total: 142, matched: 139, mismatches: 3, match_rate: 97.9 },
+    ]},
+  })),
+
+  // GET /api/recon/runs/:id/delta/  — diff for a specific run
+  getDelta: (id) => http.get(`/recon/runs/${id}/delta/`).catch(() => ({
+    data: { results: [] },
+  })),
+
+  // GET /api/recon/mismatches/  — all open mismatches
+  getMismatches: (params) => http.get('/recon/mismatches/', { params }).catch(() => ({
+    data: { results: [] },
+  })),
+
+  // POST /api/recon/mismatches/:id/dispute/  — raise dispute
+  raiseDispute: (id) => http.post(`/recon/mismatches/${id}/dispute/`).catch(() => ({
+    data: { message: 'Dispute raised (mock).' },
+  })),
+
+  // POST /api/recon/trigger/  — manually trigger a reconciliation run
+  triggerRun: () => http.post('/recon/trigger/').catch(() => ({
+    data: { message: 'Reconciliation triggered (mock).' },
+  })),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEBHOOK API  (mock — real endpoints TBD per backend)
+// ─────────────────────────────────────────────────────────────────────────────
+export const webhookAPI = {
+  // GET /api/webhooks/events/  — event log with status filter
+  listEvents: (params) => http.get('/webhooks/events/', { params }).catch(() => ({
+    data: { results: [] },
+  })),
+
+  // GET /api/webhooks/dlq/  — dead-letter queue
+  getDLQ: (params) => http.get('/webhooks/dlq/', { params }).catch(() => ({
+    data: { results: [] },
+  })),
+
+  // POST /api/webhooks/dlq/:id/replay/  — replay a DLQ event
+  replayEvent: (id) => http.post(`/webhooks/dlq/${id}/replay/`).catch(() => ({
+    data: { message: 'Event replayed (mock).' },
+  })),
+
+  // GET /api/webhooks/stats/  — delivery stats (total, delivered, duplicates, failed)
+  getStats: () => http.get('/webhooks/stats/').catch(() => ({
+    data: { total: 1482, delivered: 1469, duplicates_dropped: 12, failed: 1 },
+  })),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPROVALS API  (mock — real endpoints TBD per backend)
+// ─────────────────────────────────────────────────────────────────────────────
+export const approvalsAPI = {
+  // GET /api/approvals/queue/  — pending approval requests
+  getQueue: (params) => http.get('/approvals/queue/', { params }).catch(() => ({
+    data: { results: [] },
+  })),
+
+  // POST /api/approvals/:id/approve/
+  approve: (id, d) => http.post(`/approvals/${id}/approve/`, d).catch(() => ({
+    data: { message: 'Approved (mock).' },
+  })),
+
+  // POST /api/approvals/:id/reject/
+  reject: (id, d) => http.post(`/approvals/${id}/reject/`, d).catch(() => ({
+    data: { message: 'Rejected (mock).' },
+  })),
+
+  // GET /api/approvals/rules/  — threshold rules
+  getRules: () => http.get('/approvals/rules/').catch(() => ({
+    data: { results: [] },
+  })),
+};

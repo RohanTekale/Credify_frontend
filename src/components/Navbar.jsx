@@ -110,14 +110,11 @@ const Navbar = () => {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const navLinks = [
-    { path:'/',         label:'Home' },
+    { path:'/',         label:'Home'     },
     { path:'/features', label:'Features' },
-    { path:'/pricing',  label:'Pricing' },
-    { path:'/faq',      label:'FAQ' },
-   { path:'/kyc', label:'KYC', icon: Shield },
-
+    { path:'/pricing',  label:'Pricing'  },
+    { path:'/faq',      label:'FAQ'      },
   ];
-
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(path + '/');
 

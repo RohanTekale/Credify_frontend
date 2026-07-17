@@ -5,57 +5,52 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const QA = [
   {
-    keys: ['card', 'virtual', 'issue', 'create', 'new card', 'get card'],
-    chips: ['How to freeze a card?', 'What is the card limit?', 'Can I have multiple cards?'],
-    reply: `Your virtual card is issued instantly after KYC verification!\n\nHere's how it works:\n• Go to Dashboard → My Cards\n• Click Issue New Card\n• Your 16-digit card number, CVV & expiry are generated immediately\n\nCards are active right away and work for online purchases. Need help with limits?`,
+    keys: ['approval', 'approve', 'payment approval', 'pending approval', 'who approves'],
+    chips: ['How do approval chains work?', 'Set approval thresholds', 'What is Tier 3 approval?'],
+    reply: `Credify routes every payment through your configured approval chain.\n\nHow it works:\n• Payments below your Tier 1 threshold → auto-approved\n• Mid-range payments → routed to Finance Manager\n• Large payments → escalated to CFO\n\nConfigure thresholds at Dashboard → Approvals → Threshold Rules. Every decision is logged with actor, timestamp, and IP.`,
   },
   {
-    keys: ['freeze', 'frozen', 'block', 'unfreeze', 'lock'],
-    chips: ['How do I unfreeze?', 'Is my card blocked permanently?', 'Contact support'],
-    reply: `Freezing your card takes just 2 seconds!\n\nTo freeze: Dashboard → My Cards → select card → Freeze\n\nTo unfreeze: Same steps → tap Unfreeze\n\nFrozen cards block all new transactions instantly but won't affect pending charges. Blocked cards are permanent — contact support to reverse.`,
+    keys: ['reconciliation', 'recon', 'settlement', 'mismatch', 'closing books'],
+    chips: ['When does recon run?', 'What is a mismatch?', 'How to raise a dispute?'],
+    reply: `Credify runs reconciliation automatically.\n\nWhat happens:\n• Credify fetches your gateway settlement file nightly\n• Compares it line-by-line against your internal records\n• Flags mismatches as: fee variance, timing diff, or missing credit\n\nView results at Dashboard → Reconciliation → Latest Run. Dispute a mismatch with one click.`,
   },
   {
-    keys: ['limit', 'credit limit', 'increase limit', 'spending'],
-    chips: ['How to increase my limit?', 'What is my current limit?', 'Transaction declined?'],
-    reply: `Credit limits are set during onboarding based on your KYC verification.\n\nDefault limits:\n• Standard: ₹50,000/month\n• Verified+: ₹2,00,000/month\n\nTo request a limit increase, go to Dashboard → Profile → Request Limit Increase. Our team reviews within 24 hours.`,
+    keys: ['webhook', 'duplicate', 'event', 'idempotent', 'delivery', 'dlq', 'dead letter'],
+    chips: ['How are duplicates detected?', 'What is the DLQ?', 'Webhook delivery rate?'],
+    reply: `Credify handles webhook deduplication automatically.\n\nHow it works:\n• Every inbound event is fingerprinted by gateway event ID\n• On first receipt, the ID is stored\n• Any retry carrying the same ID is dropped in <5ms\n\nFailed events after 3 retries go to the Dead-Letter Queue for manual inspection. Check Dashboard → Webhooks → Event Log.`,
   },
   {
-    keys: ['transaction', 'purchase', 'payment', 'declined', 'failed', 'refund'],
-    chips: ['How long does refund take?', 'Why was my payment declined?', 'View my transactions'],
-    reply: `Transaction questions — I've got you!\n\nRefunds typically reflect in 3–5 business days after the merchant processes them.\n\nIf a payment was declined:\n1. Check your card isn't frozen\n2. Verify available credit limit\n3. Confirm card details are correct\n\nFor disputes, go to Transactions → select item → Raise Dispute.`,
+    keys: ['gateway', 'razorpay', 'stripe', 'connect', 'integration', 'api key'],
+    chips: ['Which gateways are supported?', 'How to connect Razorpay?', 'API key setup'],
+    reply: `Credify supports Razorpay and Stripe out of the box.\n\nTo connect:\n1. Go to Dashboard → Integrations → Gateway Connectors\n2. Enter your gateway API key and webhook secret\n3. Credify validates the connection and starts syncing\n\nCustom gateways can be added via CSV upload or REST API. No code changes needed.`,
   },
   {
-    keys: ['bill', 'billing', 'pay bill', 'statement', 'due', 'outstanding'],
-    chips: ['When is my bill due?', 'How to pay my bill?', 'Download statement'],
-    reply: `Billing is easy on Credify!\n\nBill cycle: Monthly, generated on the 1st\nDue date: 20th of each month\nMinimum payment: 10% of outstanding balance\n\nTo pay: Dashboard → Billing → Make Payment\n\nYou can pay in full or partial amounts. Late payments attract a 2% fee.`,
+    keys: ['threshold', 'tier', 'limit', 'amount', 'rule', 'configure'],
+    chips: ['Set approval tiers', 'Who can configure rules?', 'SLA for approvals?'],
+    reply: `Approval thresholds are fully configurable.\n\nDefault setup:\n• Tier 1: < ₹50K → auto-approve\n• Tier 2: ₹50K–₹5L → Finance Manager\n• Tier 3: > ₹5L → CFO\n\nEach tier has a configurable SLA. Breached SLAs auto-escalate to the backup approver. Configure at Dashboard → Approvals → Threshold Rules.`,
   },
   {
     keys: ['kyc', 'verify', 'verification', 'document', 'identity', 'upload'],
-    chips: ['What documents are needed?', 'How long does KYC take?', 'KYC rejected?'],
-    reply: `KYC verification is required to unlock full features.\n\nDocuments accepted:\n• Aadhaar Card\n• PAN Card\n• Passport\n• Driving License\n\nSteps:\n1. Dashboard → KYC & Security\n2. Upload front & back\n3. Take a selfie for liveness check\n\nVerification usually completes in 30 minutes during business hours.`,
+    chips: ['Documents needed', 'How long does KYC take?', 'KYC rejected?'],
+    reply: `KYC is required to unlock all platform features.\n\nDocuments accepted:\n• Aadhaar Card\n• PAN Card\n• Passport\n\nSteps: Dashboard → KYC → Upload documents → Liveness check\n\nVerification usually completes in 30 minutes during business hours.`,
   },
   {
-    keys: ['reward', 'points', 'earn', 'redeem', 'cashback', 'benefits'],
-    chips: ['How to redeem points?', 'What can I redeem for?', 'Check my points'],
-    reply: `Earn points on every transaction with Credify Rewards!\n\nEarning rate:\n• 1 point per ₹100 spent\n• 3x points on weekends\n• 5x points on partner merchants\n\nRedeem for:\n• Statement credit\n• Gift vouchers\n• Exclusive partner offers\n\nCheck your balance at Dashboard → Rewards.`,
+    keys: ['password', 'forgot', 'reset', 'login', 'locked', '2fa', 'account', 'access'],
+    chips: ['Reset password', 'Enable 2FA', 'Account locked?'],
+    reply: `Account access help:\n\nForgot password?\nClick "Forgot Password" on login → check email for reset link (valid 15 min).\n\nAccount locked?\nAfter 5 failed attempts, it locks for 30 minutes.\n\nEnable 2FA: Dashboard → Profile → Security → Two-Factor Auth.`,
   },
   {
-    keys: ['password', 'forgot', 'reset', 'login', 'sign in', 'locked', '2fa', 'account'],
-    chips: ['How to reset password?', 'Account locked?', 'Enable 2FA'],
-    reply: `Account access help:\n\nForgot password?\nClick "Forgot Password" on the login page → enter your email → check inbox for reset link (valid 15 min).\n\nAccount locked?\nAfter 5 failed attempts your account locks for 30 minutes automatically.\n\nEnable 2FA: Dashboard → Profile → Security → Enable Two-Factor Auth.`,
-  },
-  {
-    keys: ['hello', 'hi', 'hey', 'help', 'support'],
-    chips: ['Issue a virtual card', 'Check my billing', 'Rewards & points', 'Freeze my card'],
-    reply: `Hey there! I'm Credily, your Credify support assistant.\n\nI can help you with:\n• Virtual cards & limits\n• Transactions & refunds\n• Billing & payments\n• KYC verification\n• Rewards & points\n• Account security\n\nWhat can I help you with today?`,
+    keys: ['hello', 'hi', 'hey', 'help', 'support', 'what can you do'],
+    chips: ['How do approvals work?', 'Set up reconciliation', 'Webhook deduplication', 'Connect a gateway'],
+    reply: `Hey! I'm Credily — Credify's finance ops assistant.\n\nI can help you with:\n• Payment approval chains & thresholds\n• Automated reconciliation & mismatches\n• Webhook deduplication & event logs\n• Gateway connections (Razorpay, Stripe)\n• KYC & account security\n\nWhat are you working on?`,
   },
 ];
 
-const DEFAULT_CHIPS = ['Issue a card', 'Freeze my card', 'Check billing', 'My rewards', 'KYC help', 'Transaction failed'];
+const DEFAULT_CHIPS = ['How do approvals work?', 'Set up reconciliation', 'Webhook deduplication', 'Connect a gateway', 'KYC help', 'Account security'];
 
-const FALLBACK = `Hmm, I'm not sure about that one! Here's what I can help with:\n\n• Virtual cards & limits\n• Transactions & refunds\n• Billing & payments\n• KYC verification\n• Rewards & points\n• Account security\n\nFor complex issues, email support@credify.in — we respond within 2 hours.`;
+const FALLBACK = `Hmm, I'm not sure about that one! Here's what I can help with:\n\n• Payment approval chains & thresholds\n• Automated reconciliation & mismatches\n• Webhook deduplication & event logs\n• Gateway connections (Razorpay, Stripe)\n• KYC & account security\n\nFor complex issues, email support@credify.io — we respond within 4 hours.`;
 
-const WELCOME = `Hey! I'm Credily — Credify's support assistant.\n\nHow can I help you today?`;
+const WELCOME = `Hey! I'm Credily — Credify's finance ops assistant.\n\nHow can I help you today?`;
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const FaceIcon = ({ size = 18 }) => (

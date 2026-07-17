@@ -5,6 +5,7 @@ import { Eye, EyeOff, Lock, Mail, RefreshCw, X, AlertTriangle, ArrowRight } from
 import { authAPI } from '../../services/api';
 import { useToast, Field, Button, Spinner } from '../../components/ui';
 import useAuthStore from '../../store/authStore';
+import { Tilt3D, Magnetic } from '../../components/cinema/TouchFX';
 
 /* ── Cinematic 3D Logo (canvas) ─────────────────────────────────────────── */
 const CredifyLogo3D = ({ size = 44 }) => {
@@ -182,12 +183,12 @@ export default function Login() {
         <div className="auth-glow-1" />
         <div className="auth-glow-2" />
 
-        <div className="auth-card" style={{
+        <Tilt3D strength={7} pop={22} className="auth-card" style={{
           opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0) scale(1)' : 'translateY(28px) scale(0.97)',
-          transition: 'all 0.55s cubic-bezier(0.16,1,0.3,1)',
+          transform: mounted ? undefined : 'translateY(28px) scale(0.97)',
+          transition: 'opacity 0.55s cubic-bezier(0.16,1,0.3,1)',
           borderRadius: 28,
-          position: 'relative', zIndex: 1,
+          zIndex: 1,
           backdropFilter: 'blur(40px)',
           boxShadow: '0 32px 100px rgba(59,97,245,0.14), 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
         }}>
@@ -257,6 +258,7 @@ export default function Login() {
             </div>
 
             {/* Submit button */}
+            <Magnetic radius={90} pull={0.25} style={{ width: '100%' }}>
             <button
               type="submit" disabled={loading}
               style={{
@@ -269,11 +271,12 @@ export default function Login() {
                 boxShadow: loading ? 'none' : '0 8px 28px rgba(59,97,245,0.36)',
                 opacity: loading ? 0.75 : 1,
               }}
-              onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 12px 36px rgba(59,97,245,0.45)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(59,97,245,0.36)'; }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.boxShadow = '0 14px 40px rgba(59,97,245,0.5)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(59,97,245,0.36)'; }}
             >
               {loading ? <><Spinner size={15} color="#fff" /> Signing in…</> : <>Sign In <ArrowRight size={15} /></>}
             </button>
+            </Magnetic>
           </form>
 
           <p className="auth-footer-text" style={{ marginTop: 22 }}>
@@ -289,7 +292,7 @@ export default function Login() {
           <div className="auth-demo-hint" style={{ borderRadius: 12, fontSize: 11 }}>
             Admin demo: admin@credify / Credifyadmin@00715
           </div>
-        </div>
+        </Tilt3D>
       </div>
     </>
   );
