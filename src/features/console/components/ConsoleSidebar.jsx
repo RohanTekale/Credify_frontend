@@ -122,11 +122,7 @@ const ConsoleSidebar = ({ approvalsCount = 3 }) => {
           <NavItem to="/dashboard/roles" icon="roles">Team & Roles</NavItem>
           <NavItem to="/dashboard/integrations" icon="integrations">Integrations</NavItem>
 
-          <div className="navlab">Admin</div>
-          <NavLink to="/admin" className="nav">
-            {NAV_ICONS.roles}
-            Admin panel
-          </NavLink>
+          <div className="navlab">Design</div>
           <NavItem to="/dashboard/design" icon="design">Design system</NavItem>
         </>
       )}

@@ -168,7 +168,9 @@ export default function Login() {
       // role gating reflects the backend, not just the login payload.
       try { await hydrateProfile(); } catch { /* profile endpoint failure must not block login */ }
       toast.success('Welcome back!');
-      navigate('/dashboard', { replace: true });
+      // Admins land in the admin panel; members land in the ops console.
+      const { isAdmin } = useAuthStore.getState();
+      navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
     } catch (err) {
       const msg = err.message || '';
       const isDeact = msg.toLowerCase().includes('deactivated') || msg.toLowerCase().includes('inactive') || msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('reactivat');

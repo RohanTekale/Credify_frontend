@@ -395,6 +395,7 @@ const Sidebar = ({ module, activeItem, setActiveItem, badges, navigate }) => {
   if (!mod) return null;
 
   const QUICK_LINKS = [
+    { id: '__console__', icon: LayoutDashboard, label: 'Ops Console', to: '/dashboard' },
     { id: '__audit__',   icon: ClipboardList, label: 'Audit Logs',    to: null },
     { id: '__health__',  icon: Cpu,           label: 'System Health', to: null },
     { id: '__dev__',     icon: Terminal,      label: 'Dev Panel',     to: '/dev', adminOnly: true },
