@@ -1,7 +1,7 @@
 // src/store/authStore.js
 // ─── Credify Auth State ────────────────────────────────────────────────────────
 import { create } from 'zustand';
-import { tokenStorage } from '../services/api';
+import { tokenStorage, userAPI } from '../services/api';
 
 const parseJWT = (token) => {
   try {
@@ -47,6 +47,24 @@ const useAuthStore = create((set, get) => ({
     tokenStorage.clear();
     localStorage.removeItem('is_admin');
     set({ token: null, user: null, isAdmin: false });
+  },
+
+  /**
+   * Fetch the real profile from the backend and refresh user + role.
+   * Called after login and on app boot so role gating always reflects the API,
+   * not stale localStorage data.
+   */
+  hydrateProfile: async () => {
+    if (!get().token) return null;
+    const res = await userAPI.getProfile();
+    const profile = res.data?.data ?? res.data;
+    if (!profile || typeof profile !== 'object') return null;
+
+    const isAdmin = !!(profile.is_staff || profile.is_superuser);
+    localStorage.setItem('user', JSON.stringify(profile));
+    localStorage.setItem('is_admin', String(isAdmin));
+    set({ user: profile, isAdmin });
+    return profile;
   },
 
   /**

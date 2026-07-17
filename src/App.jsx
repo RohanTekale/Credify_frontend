@@ -77,6 +77,12 @@ const DevRoute = ({ children }) => {
   return children;
 };
 
+// Admin-only console pages (Configure section). Members are bounced to the dashboard.
+const AdminOnly = ({ children }) => {
+  const { isAdmin } = useAuthStore();
+  return isAdmin ? children : <Navigate to="/dashboard" replace />;
+};
+
 // ── Inner app wrapper ─────────────────────────────────────────────────────────
 const AppInner = () => {
   const { isAdmin }  = useAuthStore();
@@ -85,7 +91,14 @@ const AppInner = () => {
 
   // Paths where the global Navbar + padding must be suppressed
   // because those pages render their own full-screen shell
-  const { token } = useAuthStore();
+  const { token, hydrateProfile } = useAuthStore();
+
+  // Refresh user + role from the API on boot so gating never relies on
+  // stale localStorage (e.g. role changed server-side since last visit).
+  useEffect(() => {
+    if (token) hydrateProfile().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
   const isDevPath   = pathname.startsWith('/dev');
   const isAdminPath = pathname.startsWith('/dashboard') && isAdmin
                    || pathname === '/admin';
@@ -157,17 +170,17 @@ const AppInner = () => {
             <Route path="recon" element={<ReconPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="ledger" element={<LedgerPage />} />
-            <Route path="policies" element={<PoliciesPage />} />
-            <Route path="vendors" element={<VendorsPage />} />
-            <Route path="roles" element={<RolesPage />} />
-            <Route path="integrations" element={<IntegrationsPage />} />
-            <Route path="design" element={<DesignSystemPage />} />
+            <Route path="policies" element={<AdminOnly><PoliciesPage /></AdminOnly>} />
+            <Route path="vendors" element={<AdminOnly><VendorsPage /></AdminOnly>} />
+            <Route path="roles" element={<AdminOnly><RolesPage /></AdminOnly>} />
+            <Route path="integrations" element={<AdminOnly><IntegrationsPage /></AdminOnly>} />
+            <Route path="design" element={<AdminOnly><DesignSystemPage /></AdminOnly>} />
           </Route>
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <AdminDashboard />
+                <AdminOnly><AdminDashboard /></AdminOnly>
               </ProtectedRoute>
             }
           />

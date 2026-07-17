@@ -134,7 +134,7 @@ function ReactivationModal({ onClose }) {
 export default function Login() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { setAuth } = useAuthStore();
+  const { setAuth, hydrateProfile } = useAuthStore();
   const [form, setForm] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -164,6 +164,9 @@ export default function Login() {
       const refresh = data?.refresh || data?.data?.refresh;
       const user = data?.user || data?.data?.user || { username: form.username.trim() };
       setAuth(access, refresh, user);
+      // Pull the real profile (name, is_staff/is_superuser) from the API so
+      // role gating reflects the backend, not just the login payload.
+      try { await hydrateProfile(); } catch { /* profile endpoint failure must not block login */ }
       toast.success('Welcome back!');
       navigate('/dashboard', { replace: true });
     } catch (err) {

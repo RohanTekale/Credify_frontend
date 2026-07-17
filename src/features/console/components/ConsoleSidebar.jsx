@@ -114,14 +114,22 @@ const ConsoleSidebar = ({ approvalsCount = 3 }) => {
       <NavItem to="/dashboard/events" icon="events">Events</NavItem>
       <NavItem to="/dashboard/ledger" icon="ledger">Ledger</NavItem>
 
-      <div className="navlab">Configure</div>
-      <NavItem to="/dashboard/policies" icon="policies">Policies</NavItem>
-      <NavItem to="/dashboard/vendors" icon="vendors">Vendors</NavItem>
-      <NavItem to="/dashboard/roles" icon="roles">Team & Roles</NavItem>
-      <NavItem to="/dashboard/integrations" icon="integrations">Integrations</NavItem>
+      {isAdmin && (
+        <>
+          <div className="navlab">Configure</div>
+          <NavItem to="/dashboard/policies" icon="policies">Policies</NavItem>
+          <NavItem to="/dashboard/vendors" icon="vendors">Vendors</NavItem>
+          <NavItem to="/dashboard/roles" icon="roles">Team & Roles</NavItem>
+          <NavItem to="/dashboard/integrations" icon="integrations">Integrations</NavItem>
 
-      <div className="navlab">Design</div>
-      <NavItem to="/dashboard/design" icon="design">Design system</NavItem>
+          <div className="navlab">Admin</div>
+          <NavLink to="/admin" className="nav">
+            {NAV_ICONS.roles}
+            Admin panel
+          </NavLink>
+          <NavItem to="/dashboard/design" icon="design">Design system</NavItem>
+        </>
+      )}
 
       <div className="foot">
         <div className="avatar">{initials}</div>
