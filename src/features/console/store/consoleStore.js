@@ -73,12 +73,24 @@ const BUILTIN_ROLES = [
 const useConsoleStore = create(
   persist(
     (set, get) => ({
+      org: null,
       vendors: [],
       payments: [],
       events: [],
       ledger: [],
       roles: BUILTIN_ROLES,
       seq: 1001,
+
+      setOrg: ({ name, currency, timezone, invites = [] }) =>
+        set({
+          org: {
+            name: name.trim(),
+            currency,
+            timezone,
+            invites: invites.filter(Boolean),
+            createdAt: now(),
+          },
+        }),
 
       addVendor: ({ name, account, ifsc }) => {
         const vendor = {

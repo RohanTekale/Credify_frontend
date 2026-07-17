@@ -10,7 +10,7 @@ const isToday = (iso) => iso && new Date(iso).toDateString() === new Date().toDa
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { payments, events } = useConsoleStore();
+  const { payments, events, org } = useConsoleStore();
   const firstName = userDisplayName(user).split(' ')[0];
 
   const paidToday = payments
@@ -29,7 +29,7 @@ const DashboardPage = () => {
 
   return (
     <div className="pg-view">
-      <div className="crumb">Credify Pvt Ltd &middot; Operations</div>
+      <div className="crumb">{org?.name || 'Credify'} &middot; Operations</div>
       <div className="pagetop">
         <div>
           <h1 className="pg">{greeting()}, {firstName}</h1>

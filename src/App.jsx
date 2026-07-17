@@ -152,7 +152,14 @@ const AppInner = () => {
           <Route path="/register" element={<Register />} />
 
           {/* ── User / Admin dashboard ────────────────────────────────── */}
-          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/dashboard"

@@ -83,6 +83,7 @@ const ConsoleSidebar = () => {
   const approvalsCount = useConsoleStore(
     (s) => s.payments.filter((p) => p.status === 'in_approval').length
   );
+  const orgName = useConsoleStore((s) => s.org?.name || 'Your organization');
 
   const initials = userInitials(user);
   const displayName = userDisplayName(user);
@@ -107,7 +108,7 @@ const ConsoleSidebar = () => {
             <path d="M15 15.5l2.5 2.5 4.5-4.5" />
           </svg>
         </span>
-        <div><b>Credify</b><span className="org">Credify Pvt Ltd</span></div>
+        <div><b>Credify</b><span className="org">{orgName}</span></div>
       </div>
 
       <div className="navlab">Operate</div>
