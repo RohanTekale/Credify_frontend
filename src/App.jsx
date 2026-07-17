@@ -19,8 +19,23 @@ import Features from './pages/Features';
 
 import Login          from './features/auth/Login';
 import Register       from './features/auth/Register';
-import Dashboard      from './features/dashboard/Dashboard';
 import AdminDashboard from './features/admin/AdminDashboard';
+
+import ConsoleShell        from './features/console/ConsoleShell';
+import OnboardingPage      from './features/console/pages/OnboardingPage';
+import DashboardPage       from './features/console/pages/DashboardPage';
+import PaymentsPage        from './features/console/pages/PaymentsPage';
+import PaymentNewPage      from './features/console/pages/PaymentNewPage';
+import PaymentDetailPage   from './features/console/pages/PaymentDetailPage';
+import ApprovalsPage       from './features/console/pages/ApprovalsPage';
+import ReconPage           from './features/console/pages/ReconPage';
+import EventsPage          from './features/console/pages/EventsPage';
+import LedgerPage          from './features/console/pages/LedgerPage';
+import PoliciesPage        from './features/console/pages/PoliciesPage';
+import VendorsPage         from './features/console/pages/VendorsPage';
+import RolesPage           from './features/console/pages/RolesPage';
+import IntegrationsPage    from './features/console/pages/IntegrationsPage';
+import DesignSystemPage    from './features/console/pages/DesignSystemPage';
 
 // ── Dev Panel pages ────────────────────────────────────────────────────────────
 import DevLayout       from './pages/dev/DevLayout';
@@ -72,13 +87,14 @@ const AppInner = () => {
   // because those pages render their own full-screen shell
   const { token } = useAuthStore();
   const isDevPath   = pathname.startsWith('/dev');
-  const isAdminPath = pathname === '/dashboard' && isAdmin
+  const isAdminPath = pathname.startsWith('/dashboard') && isAdmin
                    || pathname === '/admin';
   // Suppress global marketing nav for ALL authenticated dashboard users too
-  const isUserDashboard = !!token && pathname === '/dashboard';
+  const isUserDashboard = !!token && pathname.startsWith('/dashboard');
+  const isOnboardingPath = pathname === '/onboarding';
 
-  // Suppress global chrome for admin panel, dev panel, AND user dashboard
-  const suppressGlobalNav = isDevPath || isAdminPath || isUserDashboard;
+  // Suppress global chrome for admin panel, dev panel, user dashboard, and onboarding
+  const suppressGlobalNav = isDevPath || isAdminPath || isUserDashboard || isOnboardingPath;
 
   const isDark = theme === 'dark';
 
@@ -123,19 +139,35 @@ const AppInner = () => {
           <Route path="/register" element={<Register />} />
 
           {/* ── User / Admin dashboard ────────────────────────────────── */}
+          <Route path="/onboarding" element={<OnboardingPage />} />
+
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                {isAdmin ? <AdminDashboard /> : <Dashboard />}
+                <ConsoleShell />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<DashboardPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="payments/new" element={<PaymentNewPage />} />
+            <Route path="payments/:ref" element={<PaymentDetailPage />} />
+            <Route path="approvals" element={<ApprovalsPage />} />
+            <Route path="recon" element={<ReconPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="ledger" element={<LedgerPage />} />
+            <Route path="policies" element={<PoliciesPage />} />
+            <Route path="vendors" element={<VendorsPage />} />
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="integrations" element={<IntegrationsPage />} />
+            <Route path="design" element={<DesignSystemPage />} />
+          </Route>
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                {isAdmin ? <AdminDashboard /> : <Dashboard />}
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

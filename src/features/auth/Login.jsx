@@ -165,7 +165,7 @@ export default function Login() {
       const user = data?.user || data?.data?.user || {};
       setAuth(access, refresh, user);
       toast.success('Welcome back!');
-      navigate(user.is_staff || user.is_superuser ? '/admin' : '/dashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg = err.message || '';
       const isDeact = msg.toLowerCase().includes('deactivated') || msg.toLowerCase().includes('inactive') || msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('reactivat');
@@ -289,9 +289,6 @@ export default function Login() {
             </button>
           </div>
 
-          <div className="auth-demo-hint" style={{ borderRadius: 12, fontSize: 11 }}>
-            Admin demo: admin@credify / Credifyadmin@00715
-          </div>
         </Tilt3D>
       </div>
     </>

@@ -1,0 +1,125 @@
+.credify-console {--bg:#0a0d16; --bg2:#0d1120; --surface:#111726; --card:#131a2c; --raise:#182036;
+  --line:#232b41; --line2:#2c3552;
+  --text:#e9edf6; --muted:#8b93a9; --dim:#5c6479;
+  --indigo:#4f46e5; --indigo2:#6366f1; --blue:#3b82f6; --violet:#8b5cf6;
+  --green:#10b981; --green2:#34d399; --amber:#f59e0b; --rose:#f43f5e; --teal:#2dd4bf;
+  --chip-green:rgba(16,185,129,.14); --chip-amber:rgba(245,158,11,.14);
+  --chip-rose:rgba(244,63,94,.14); --chip-blue:rgba(59,130,246,.14);
+  --chip-violet:rgba(139,92,246,.16); --chip-grey:rgba(139,147,169,.14);
+  --r:12px;}
+.credify-console * {box-sizing:border-box;margin:0;padding:0}
+.credify-console {background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;}
+.credify-console a {color:var(--indigo2);text-decoration:none}
+.credify-console button {font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.credify-console input, .credify-console select, .credify-console textarea {font:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;width:100%;outline:none}
+.credify-console input:focus, .credify-console select:focus, .credify-console textarea:focus {border-color:var(--indigo2)}
+.credify-console ::placeholder {color:var(--dim)}
+.credify-console .app {display:none;min-height:100vh}
+.credify-console .app.active {display:grid;grid-template-columns:236px 1fr}
+.credify-console .side {background:var(--bg2);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.credify-console .brand {display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.credify-console .brand b {font-size:16px;letter-spacing:.2px}
+.credify-console .brand .org {display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+.credify-console .navlab {font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);padding:12px 10px 5px}
+.credify-console .nav {display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--muted);font-weight:500;width:100%;text-align:left}
+.credify-console .nav svg {flex:none}
+.credify-console .nav:hover {background:var(--surface);color:var(--text)}
+.credify-console .nav.on {background:linear-gradient(90deg,rgba(79,70,229,.22),rgba(59,130,246,.10));color:#fff;box-shadow:inset 0 0 0 1px rgba(99,102,241,.35)}
+.credify-console .nav .cnt {margin-left:auto;background:var(--chip-amber);color:var(--amber);font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:99px}
+.credify-console .side .foot {margin-top:auto;border-top:1px solid var(--line);padding-top:12px;display:flex;align-items:center;gap:9px;font-size:12px}
+.credify-console .avatar {width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--indigo),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none}
+.credify-console .main {padding:26px 32px 60px;max-width:1120px}
+.credify-console .crumb {font-size:11.5px;color:var(--dim);margin-bottom:6px}
+.credify-console h1.pg {font-size:21px;font-weight:700;margin-bottom:4px}
+.credify-console .sub {color:var(--muted);font-size:12.5px;margin-bottom:22px}
+.credify-console .pagetop {display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.credify-console .btn {display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;font-weight:600;font-size:13px;background:linear-gradient(135deg,var(--indigo),var(--blue));color:#fff}
+.credify-console .btn:hover {filter:brightness(1.12)}
+.credify-console .btn.ghost {background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--line2)}
+.credify-console .btn.danger {background:var(--chip-rose);color:var(--rose);box-shadow:inset 0 0 0 1px rgba(244,63,94,.35)}
+.credify-console .btn.ok {background:var(--chip-green);color:var(--green2);box-shadow:inset 0 0 0 1px rgba(16,185,129,.35)}
+.credify-console .btn.sm {padding:5px 11px;font-size:12px}
+.credify-console .card {background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.credify-console .card h3 {font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.credify-console .grid {display:grid;gap:14px}
+.credify-console .g4 {grid-template-columns:repeat(4,1fr)}
+.credify-console .g3 {grid-template-columns:repeat(3,1fr)}
+.credify-console .g2 {grid-template-columns:repeat(2,1fr)}
+.credify-console .kpi {background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+.credify-console .kpi .v {font-size:21px;font-weight:800;margin:2px 0}
+.credify-console .kpi .l {font-size:11px;color:var(--muted)}
+.credify-console .kpi .d {font-size:10.5px;margin-top:3px}
+.credify-console .up {color:var(--green2)}
+.credify-console .dn {color:var(--rose)}
+.credify-console .wn {color:var(--amber)}
+.credify-console table {width:100%;border-collapse:collapse;font-size:12.5px}
+.credify-console th {font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.credify-console td {padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.credify-console tr:last-child td {border-bottom:none}
+.credify-console tbody tr:hover td {background:rgba(99,102,241,.04)}
+.credify-console .chip {display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700}
+.credify-console .chip::before {content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.credify-console .c-green {background:var(--chip-green);color:var(--green2)}
+.credify-console .c-amber {background:var(--chip-amber);color:var(--amber)}
+.credify-console .c-rose {background:var(--chip-rose);color:var(--rose)}
+.credify-console .c-blue {background:var(--chip-blue);color:#7db3fb}
+.credify-console .c-violet {background:var(--chip-violet);color:#b09bfb}
+.credify-console .c-grey {background:var(--chip-grey);color:var(--muted)}
+.credify-console .role {display:inline-block;padding:2px 9px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
+.credify-console .r-admin {background:var(--chip-violet);color:#b09bfb}
+.credify-console .r-fin {background:var(--chip-blue);color:#7db3fb}
+.credify-console .r-app {background:var(--chip-green);color:var(--green2)}
+.credify-console .r-custom {background:var(--chip-amber);color:var(--amber)}
+.credify-console .mono {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted)}
+.credify-console .empty {border:1px dashed var(--line2);border-radius:var(--r);padding:34px;text-align:center;color:var(--muted);font-size:12.5px}
+.credify-console .empty b {display:block;color:var(--text);margin-bottom:4px;font-size:13.5px}
+.credify-console .note {background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:11px 14px;font-size:12px;color:#a8c7f5;margin:14px 0}
+.credify-console .warnbox {background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:11px 14px;font-size:12px;color:#f2c069;margin:14px 0}
+.credify-console .field {margin-bottom:14px}
+.credify-console .field label {display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.credify-console .hr {border:none;border-top:1px solid var(--line);margin:16px 0}
+.credify-console .full {display:none;min-height:100vh;align-items:center;justify-content:center;background:radial-gradient(900px 500px at 50% -10%,rgba(79,70,229,.18),transparent),var(--bg)}
+.credify-console .full.active {display:flex}
+.credify-console .authcard {width:400px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px}
+.credify-console .authcard h2 {font-size:19px;margin:14px 0 4px}
+.credify-console .authcard .m {color:var(--muted);font-size:12.5px;margin-bottom:20px}
+.credify-console .steps {display:flex;gap:8px;margin:18px 0 22px}
+.credify-console .step {flex:1;height:4px;border-radius:4px;background:var(--line)}
+.credify-console .step.on {background:linear-gradient(90deg,var(--indigo),var(--blue))}
+.credify-console .tl {list-style:none}
+.credify-console .tl li {display:flex;gap:12px;padding:0 0 18px;position:relative}
+.credify-console .tl li::before {content:"";position:absolute;left:11px;top:26px;bottom:0;width:2px;background:var(--line)}
+.credify-console .tl li:last-child::before {display:none}
+.credify-console .tl .ic {width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;z-index:1}
+.credify-console .tl .ok {background:var(--chip-green);color:var(--green2);box-shadow:0 0 0 1px rgba(16,185,129,.4)}
+.credify-console .tl .pend {background:var(--chip-amber);color:var(--amber);box-shadow:0 0 0 1px rgba(245,158,11,.4)}
+.credify-console .tl .wait {background:var(--chip-grey);color:var(--muted);box-shadow:0 0 0 1px var(--line2)}
+.credify-console .tl b {font-size:12.5px}
+.credify-console .tl .who {font-size:11px;color:var(--muted)}
+.credify-console .tl .when {font-size:10.5px;color:var(--dim)}
+.credify-console .overlay {position:fixed;inset:0;background:rgba(5,8,15,.72);display:none;align-items:center;justify-content:center;z-index:50}
+.credify-console .overlay.active {display:flex}
+.credify-console .modal {width:440px;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:22px}
+.credify-console .modal h3 {font-size:15px;margin-bottom:6px}
+.credify-console .modal .m {color:var(--muted);font-size:12.5px;margin-bottom:16px}
+.credify-console .drawer {position:fixed;top:0;right:-380px;width:360px;height:100vh;background:var(--bg2);border-left:1px solid var(--line2);z-index:60;padding:22px;transition:right .25s;overflow-y:auto}
+.credify-console .drawer.open {right:0}
+.credify-console .fab {position:fixed;bottom:22px;right:22px;z-index:40;background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;padding:11px 18px;border-radius:99px;font-weight:700;font-size:12.5px;box-shadow:0 8px 24px rgba(79,70,229,.45)}
+.credify-console .dstep {display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;align-items:flex-start}
+.credify-console .dstep .n {width:20px;height:20px;border-radius:6px;background:var(--chip-violet);color:#b09bfb;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.credify-console .dstep a {display:block;font-size:11px;margin-top:2px}
+.credify-console .split {display:grid;grid-template-columns:1fr 46px 1fr;align-items:stretch;gap:0}
+.credify-console .pane {background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:13px 14px;font-size:12px}
+.credify-console .pane h5 {font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:9px}
+.credify-console .pane .row {display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line)}
+.credify-console .pane .row:last-child {border-bottom:none}
+.credify-console .pane .bad {color:var(--rose);font-weight:700}
+.credify-console .vs {display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:10px;font-weight:800}
+.credify-console .sw {display:flex;gap:10px;flex-wrap:wrap}
+.credify-console .sw div {width:120px;border-radius:10px;overflow:hidden;border:1px solid var(--line);font-size:10.5px}
+.credify-console .sw .c {height:44px}
+.credify-console .sw .t {padding:6px 9px;background:var(--bg2)}
+.credify-console .perm {display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px;font-size:12.5px}
+.credify-console .perm input {width:auto}
+.credify-console .toast {position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--raise);border:1px solid var(--line2);color:var(--text);padding:11px 18px;border-radius:10px;font-size:12.5px;font-weight:600;z-index:70;transition:transform .25s;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.credify-console .toast.show {transform:translateX(-50%) translateY(0)}
