@@ -162,7 +162,7 @@ export default function Login() {
       const data = res.data?.data ?? res.data;
       const access = data?.access || data?.data?.access;
       const refresh = data?.refresh || data?.data?.refresh;
-      const user = data?.user || data?.data?.user || {};
+      const user = data?.user || data?.data?.user || { username: form.username.trim() };
       setAuth(access, refresh, user);
       toast.success('Welcome back!');
       navigate('/dashboard', { replace: true });

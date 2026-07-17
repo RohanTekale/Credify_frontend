@@ -2,16 +2,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { kpis, waitingOnApproval, recentGatewayEvents } from '../data/mockData';
+import useAuthStore from '../../../store/authStore';
+import { userDisplayName, greeting } from '../utils';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const firstName = userDisplayName(user).split(' ')[0];
 
   return (
     <div className="pg-view">
       <div className="crumb">Credify Pvt Ltd &middot; Operations</div>
       <div className="pagetop">
         <div>
-          <h1 className="pg">Good afternoon, Aarav</h1>
+          <h1 className="pg">{greeting()}, {firstName}</h1>
           <div className="sub">3 approvals need attention &middot; last reconciliation 2h ago &middot; all gateways healthy</div>
         </div>
         <button className="btn" onClick={() => navigate('/dashboard/payments/new')}>+ New payment</button>

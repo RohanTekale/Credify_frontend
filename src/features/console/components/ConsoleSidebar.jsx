@@ -2,6 +2,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
+import { userDisplayName, userInitials } from '../utils';
 
 const NAV_ICONS = {
   dashboard: (
@@ -77,13 +78,10 @@ const NavItem = ({ to, icon, children, badge, end }) => (
 
 const ConsoleSidebar = ({ approvalsCount = 3 }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, isAdmin, logout } = useAuthStore();
 
-  const initials = (user?.first_name?.[0] || user?.name?.[0] || 'A') +
-    (user?.last_name?.[0] || 'K');
-  const displayName = user?.first_name
-    ? `${user.first_name} ${user.last_name || ''}`.trim()
-    : (user?.name || 'Aarav K.');
+  const initials = userInitials(user);
+  const displayName = userDisplayName(user);
 
   const handleSignOut = () => {
     logout();
@@ -126,10 +124,12 @@ const ConsoleSidebar = ({ approvalsCount = 3 }) => {
       <NavItem to="/dashboard/design" icon="design">Design system</NavItem>
 
       <div className="foot">
-        <div className="avatar">{initials.toUpperCase()}</div>
+        <div className="avatar">{initials}</div>
         <div>
           <b style={{ fontSize: 12 }}>{displayName}</b><br />
-          <span className="role r-admin">ADMIN</span>
+          <span className={`role ${isAdmin ? 'r-admin' : 'r-custom'}`}>
+            {isAdmin ? 'ADMIN' : 'MEMBER'}
+          </span>
         </div>
         <button style={{ marginLeft: 'auto', color: 'var(--dim)' }} onClick={handleSignOut} title="Sign out">
           &#9099;
